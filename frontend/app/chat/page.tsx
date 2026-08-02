@@ -43,7 +43,7 @@ export default function ChatPage() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-const res = await axios.post(`${API_URL}/api/chat`, {
+const res = await axios.post('https://homecareai-backend.onrender.com/api/chat', {
         messages: updatedMessages.map(m => ({
           role: m.role,
           content: m.content
