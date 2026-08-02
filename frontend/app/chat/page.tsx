@@ -9,6 +9,8 @@ type Message = {
   is_emergency?: boolean
 }
 
+const API_URL = 'https://homecareai-backend.onrender.com'
+
 export default function ChatPage() {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
@@ -24,7 +26,7 @@ export default function ChatPage() {
     } else {
       setMessages([{
         role: 'assistant',
-        content: `👋 Namaste! I'm HomeCare AI 🌿\n\nI'll help you with natural remedies and safe home care tips.\n\nHow are you feeling today? 💚`
+        content: "Namaste! I'm HomeCare AI. I'll help you with natural remedies and safe home care tips. How are you feeling today?"
       }])
     }
   }, [])
@@ -41,9 +43,7 @@ export default function ChatPage() {
     setLoading(true)
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-const res = await axios.post('https://homecareai-backend.onrender.com/api/chat', {
+      const res = await axios.post(`${API_URL}/api/chat`, {
         messages: updatedMessages.map(m => ({
           role: m.role,
           content: m.content
@@ -60,7 +60,7 @@ const res = await axios.post('https://homecareai-backend.onrender.com/api/chat',
     } catch (err) {
       setMessages([...updatedMessages, {
         role: 'assistant',
-        content: '❌ Something went wrong. Please try again.'
+        content: 'Something went wrong. Please try again.'
       }])
     } finally {
       setLoading(false)
@@ -81,11 +81,6 @@ const res = await axios.post('https://homecareai-backend.onrender.com/api/chat',
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100">
-      
-      <div className="absolute top-20 left-5 text-4xl opacity-10">🌿</div>
-      <div className="absolute top-40 right-8 text-4xl opacity-10">🍃</div>
-      <div className="absolute bottom-40 left-8 text-4xl opacity-10">🌱</div>
-      <div className="absolute bottom-20 right-5 text-4xl opacity-10">🌾</div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
 
@@ -94,12 +89,12 @@ const res = await axios.post('https://homecareai-backend.onrender.com/api/chat',
             <span className="text-2xl">🌿</span>
             <span className="font-bold text-green-800 text-lg">HomeCare AI</span>
           </div>
-          <button
-            onClick={() => router.push('/')}
+          <a
+            href="/"
             className="text-sm text-green-700 hover:text-green-900 bg-white/70 px-4 py-2 rounded-full border border-green-200 hover:bg-white transition-all"
           >
-            ← Home
-          </button>
+            Home
+          </a>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-3xl mx-auto w-full">
@@ -138,7 +133,7 @@ const res = await axios.post('https://homecareai-backend.onrender.com/api/chat',
                 </div>
                 <div className="bg-white/80 backdrop-blur-sm border border-green-200 px-4 py-3 rounded-2xl rounded-bl-sm shadow-md">
                   <div className="flex gap-1 items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" />
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
@@ -150,12 +145,6 @@ const res = await axios.post('https://homecareai-backend.onrender.com/api/chat',
           <div ref={bottomRef} />
         </div>
 
-        <div className="text-center px-4 py-1">
-          <p className="text-xs text-green-800/60">
-            🌿 Natural care guidance • Not medical diagnosis
-          </p>
-        </div>
-
         <div className="bg-white/70 backdrop-blur-md border-t border-green-200 px-4 py-3">
           <form
             onSubmit={handleSubmit}
@@ -165,7 +154,7 @@ const res = await axios.post('https://homecareai-backend.onrender.com/api/chat',
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="🌱 Describe your symptom..."
+              placeholder="Describe your symptom..."
               disabled={loading}
               className="flex-1 bg-transparent px-4 py-2 text-sm outline-none text-green-900 placeholder:text-green-600/60 disabled:opacity-50"
             />
@@ -174,7 +163,7 @@ const res = await axios.post('https://homecareai-backend.onrender.com/api/chat',
               disabled={loading || !input.trim()}
               className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:from-green-700 hover:to-emerald-700 disabled:opacity-40 shadow-md transition-all"
             >
-              Send 🌿
+              Send
             </button>
           </form>
         </div>

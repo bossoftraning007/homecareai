@@ -1,181 +1,104 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-type Message = {
-  role: 'user' | 'assistant'
-  content: string
-  is_emergency?: boolean
-}
+const symptoms = [
+  { icon: '🤧', label: 'Cold', value: 'I have a cold and blocked nose' },
+  { icon: '😷', label: 'Cough', value: 'I have a cough' },
+  { icon: '🤒', label: 'Sore Throat', value: 'I have a sore throat' },
+  { icon: '🤕', label: 'Headache', value: 'I have a headache' },
+  { icon: '🤢', label: 'Acidity', value: 'I have acidity and indigestion' },
+  { icon: '😴', label: 'Constipation', value: 'I have constipation' },
+  { icon: '🤮', label: 'Diarrhea', value: 'I have diarrhea' },
+  { icon: '🩹', label: 'Minor Cut', value: 'I have a minor cut or scrape' },
+]
 
-export default function ChatPage() {
+export default function Home() {
   const router = useRouter()
-  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const initial = localStorage.getItem('initial_message')
-    if (initial) {
-      localStorage.removeItem('initial_message')
-      sendMessage(initial)
-    } else {
-      setMessages([{
-        role: 'assistant',
-        content: `👋 Namaste! I'm HomeCare AI 🌿\n\nI'll help you with natural remedies and safe home care tips.\n\nHow are you feeling today? 💚`
-      }])
+  const handleSymptom = (value: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('initial_message', value)
     }
-  }, [])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const sendMessage = async (text: string) => {
-    const userMsg: Message = { role: 'user', content: text }
-    const updatedMessages = [...messages, userMsg]
-    setMessages(updatedMessages)
-    setInput('')
-    setLoading(true)
-
-    try {
-      const res = await axios.post('http://localhost:8000/api/chat', {
-        messages: updatedMessages.map(m => ({
-          role: m.role,
-          content: m.content
-        }))
-      })
-
-      const assistantMsg: Message = {
-        role: 'assistant',
-        content: res.data.reply,
-        is_emergency: res.data.is_emergency
-      }
-
-      setMessages([...updatedMessages, assistantMsg])
-    } catch (err) {
-      setMessages([...updatedMessages, {
-        role: 'assistant',
-        content: '❌ Something went wrong. Please try again.'
-      }])
-    } finally {
-      setLoading(false)
-    }
+    router.push('/chat')
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || loading) return
-    sendMessage(input)
-  }
-
-  const formatMessage = (content: string) => {
-    return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br/>')
+    if (!input.trim()) return
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('initial_message', input)
+    }
+    router.push('/chat')
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100">
-      
-      <div className="absolute top-20 left-5 text-4xl opacity-10">🌿</div>
-      <div className="absolute top-40 right-8 text-4xl opacity-10">🍃</div>
-      <div className="absolute bottom-40 left-8 text-4xl opacity-10">🌱</div>
-      <div className="absolute bottom-20 right-5 text-4xl opacity-10">🌾</div>
+    <div className="min-h-screen relative overflow-hidden">
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100" />
 
-        <div className="bg-white/70 backdrop-blur-md border-b border-green-200 px-4 py-3 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🌿</span>
-            <span className="font-bold text-green-800 text-lg">HomeCare AI</span>
+      <div className="absolute top-10 left-10 text-6xl opacity-20 animate-pulse">🌿</div>
+      <div className="absolute top-20 right-16 text-5xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}>🍃</div>
+      <div className="absolute bottom-20 left-20 text-6xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}>🌱</div>
+      <div className="absolute bottom-32 right-10 text-5xl opacity-20 animate-pulse" style={{ animationDelay: '0.5s' }}>🌾</div>
+
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-10">
+
+        <div className="text-center mb-10">
+          <div className="inline-block p-4 bg-white/60 backdrop-blur-sm rounded-full shadow-lg mb-4 border border-green-200">
+            <span className="text-5xl">🌿</span>
           </div>
-          <button
-            onClick={() => router.push('/')}
-            className="text-sm text-green-700 hover:text-green-900 bg-white/70 px-4 py-2 rounded-full border border-green-200 hover:bg-white transition-all"
-          >
-            ← Home
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-3xl mx-auto w-full">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className="flex items-end gap-2 max-w-[85%]">
-                {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-sm shrink-0">
-                    🌿
-                  </div>
-                )}
-                <div
-                  className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-md ${
-                    msg.role === 'user'
-                      ? 'bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-br-sm'
-                      : msg.is_emergency
-                      ? 'bg-red-50 border border-red-300 text-red-800 rounded-bl-sm'
-                      : 'bg-white/80 backdrop-blur-sm border border-green-200 text-green-900 rounded-bl-sm'
-                  }`}
-                  dangerouslySetInnerHTML={{
-                    __html: formatMessage(msg.content)
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex justify-start">
-              <div className="flex items-end gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-sm">
-                  🌿
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm border border-green-200 px-4 py-3 rounded-2xl rounded-bl-sm shadow-md">
-                  <div className="flex gap-1 items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={bottomRef} />
-        </div>
-
-        <div className="text-center px-4 py-1">
-          <p className="text-xs text-green-800/60">
-            🌿 Natural care guidance • Not medical diagnosis
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+            HomeCare AI
+          </h1>
+          <p className="text-green-800/70 mt-3 text-base font-medium">
+            Natural home remedies • Ancient wisdom • Modern care
+          </p>
+          <p className="text-green-700/60 mt-1 text-sm italic">
+            Nature heals what medicine cannot
           </p>
         </div>
 
-        <div className="bg-white/70 backdrop-blur-md border-t border-green-200 px-4 py-3">
-          <form
-            onSubmit={handleSubmit}
-            className="flex gap-2 max-w-3xl mx-auto bg-white/80 rounded-full p-2 shadow-md border border-green-200"
-          >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="🌱 Describe your symptom..."
-              disabled={loading}
-              className="flex-1 bg-transparent px-4 py-2 text-sm outline-none text-green-900 placeholder:text-green-600/60 disabled:opacity-50"
-            />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 w-full max-w-3xl">
+          {symptoms.map((s) => (
             <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:from-green-700 hover:to-emerald-700 disabled:opacity-40 shadow-md transition-all"
+              key={s.label}
+              onClick={() => handleSymptom(s.value)}
+              className="group flex flex-col items-center justify-center p-5 bg-white/70 backdrop-blur-sm border border-green-200 rounded-3xl shadow-md hover:shadow-xl hover:bg-white hover:border-green-400 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
             >
-              Send 🌿
+              <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">
+                {s.icon}
+              </span>
+              <span className="text-sm font-semibold text-green-800">
+                {s.label}
+              </span>
             </button>
-          </form>
+          ))}
         </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-2xl flex gap-2 bg-white/70 backdrop-blur-sm p-2 rounded-full shadow-lg border border-green-200"
+        >
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Describe how you're feeling..."
+            className="flex-1 bg-transparent px-5 py-3 text-sm outline-none text-green-900 placeholder:text-green-600/60"
+          />
+          <button
+            type="submit"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-full text-sm font-semibold hover:from-green-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
+          >
+            Heal
+          </button>
+        </form>
+
+        <p className="text-xs text-green-800/60 mt-8 text-center max-w-md bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 border border-green-200">
+          For minor symptoms only • Not a substitute for medical advice
+        </p>
 
       </div>
     </div>
