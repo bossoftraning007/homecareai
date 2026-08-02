@@ -1,0 +1,242 @@
+{
+  "cold": {
+    "name": "Cold / Blocked Nose",
+    "home_care": [
+      "Rest as much as possible",
+      "Drink warm fluids like ginger tea or tulsi tea",
+      "Steam inhalation with a towel over head (careful of burns)",
+      "Saline nasal rinse if available",
+      "Turmeric milk before bed"
+    ],
+    "food_tips": [
+      "Warm chicken or vegetable soup",
+      "Warm water with honey and lemon",
+      "Ginger tea with tulsi",
+      "Light easily digestible foods"
+    ],
+    "avoid": [
+      "Cold drinks and ice cream",
+      "Unnecessary antibiotics",
+      "Smoking or dusty environments"
+    ],
+    "seek_care_if": [
+      "Breathing becomes difficult",
+      "High fever above 39C",
+      "Symptoms worsen after 7 days",
+      "Infant or elderly person affected",
+      "Chest pain develops"
+    ]
+  },
+  "sore_throat": {
+    "name": "Sore Throat",
+    "home_care": [
+      "Warm salt-water gargles 3-4 times daily",
+      "Drink warm fluids frequently",
+      "Honey with warm water (adults and children over 1 year)",
+      "Rest your voice",
+      "Turmeric with warm milk before sleep",
+      "Ginger and honey lozenge"
+    ],
+    "food_tips": [
+      "Warm soup",
+      "Soft foods like khichdi or oatmeal",
+      "Warm herbal tea"
+    ],
+    "avoid": [
+      "Cold drinks and ice cream",
+      "Very spicy or oily food",
+      "Smoking",
+      "Loud talking"
+    ],
+    "seek_care_if": [
+      "Difficulty breathing",
+      "Cannot swallow saliva",
+      "High fever",
+      "Symptoms worsen after 3-4 days",
+      "White patches on throat"
+    ]
+  },
+  "headache": {
+    "name": "Headache",
+    "home_care": [
+      "Drink plenty of water (dehydration is common cause)",
+      "Rest in a quiet dark room",
+      "Cool compress on forehead",
+      "Gentle head and neck massage",
+      "Peppermint oil on temples (diluted)",
+      "Deep breathing exercises"
+    ],
+    "food_tips": [
+      "Stay well hydrated",
+      "Light meals - don't skip food",
+      "Fresh fruits",
+      "Warm ginger tea"
+    ],
+    "avoid": [
+      "Bright screens and loud noises",
+      "Skipping meals",
+      "Caffeine excess",
+      "Dehydration"
+    ],
+    "seek_care_if": [
+      "Sudden severe worst headache of life",
+      "Headache after head injury",
+      "Confusion or vision changes",
+      "Weakness or numbness in body",
+      "Stiff neck with fever",
+      "Headache worsening over days"
+    ]
+  },
+  "acidity": {
+    "name": "Acidity / Indigestion",
+    "home_care": [
+      "Drink cold milk slowly (if not lactose intolerant)",
+      "Chew fennel seeds (saunf) after meals",
+      "Coconut water",
+      "Buttermilk with cumin",
+      "Ginger tea",
+      "Walk gently after meals - don't lie down"
+    ],
+    "food_tips": [
+      "Small frequent meals",
+      "Bland foods like rice, banana, curd",
+      "Include fresh fruits",
+      "Fennel or cumin water"
+    ],
+    "avoid": [
+      "Spicy oily fried food",
+      "Coffee and tea excess",
+      "Carbonated drinks",
+      "Lying down right after eating",
+      "Late night eating"
+    ],
+    "seek_care_if": [
+      "Blood in vomit",
+      "Severe chest pain",
+      "Difficulty swallowing",
+      "Symptoms daily for weeks",
+      "Unexplained weight loss"
+    ]
+  },
+  "cough": {
+    "name": "Cough",
+    "home_care": [
+      "Honey with warm water (over 1 year old)",
+      "Ginger and honey mixture",
+      "Turmeric milk before bed",
+      "Steam inhalation carefully",
+      "Warm salt-water gargle",
+      "Tulsi and ginger tea"
+    ],
+    "food_tips": [
+      "Warm soups",
+      "Honey and lemon warm water",
+      "Warm herbal teas",
+      "Light warm foods"
+    ],
+    "avoid": [
+      "Cold foods and drinks",
+      "Dusty smoky environments",
+      "Very spicy food",
+      "Cold weather exposure"
+    ],
+    "seek_care_if": [
+      "Breathing difficulty",
+      "Blood in cough",
+      "High fever",
+      "Chest pain",
+      "Cough lasting over 3 weeks",
+      "Rapid breathing in children"
+    ]
+  },
+  "constipation": {
+    "name": "Constipation",
+    "home_care": [
+      "Drink warm water first thing in morning",
+      "Increase water intake throughout day",
+      "Fiber rich foods - fruits, vegetables, whole grains",
+      "Gentle walking or yoga",
+      "Warm water with lemon in morning",
+      "Papaya or prunes"
+    ],
+    "food_tips": [
+      "Papaya, prunes, banana, apple",
+      "Green leafy vegetables",
+      "Whole grains, oats",
+      "Plenty of water",
+      "Soaked raisins overnight"
+    ],
+    "avoid": [
+      "Processed junk food",
+      "Excess dairy if sensitive",
+      "Dehydration",
+      "Sitting for long hours"
+    ],
+    "seek_care_if": [
+      "Blood in stool",
+      "Severe abdominal pain",
+      "Constipation lasting many days",
+      "Unexplained weight loss",
+      "Vomiting with constipation"
+    ]
+  },
+  "diarrhea": {
+    "name": "Mild Diarrhea",
+    "home_care": [
+      "Drink plenty of fluids to prevent dehydration",
+      "ORS (Oral Rehydration Solution) - homemade with salt sugar water",
+      "Coconut water",
+      "Buttermilk with cumin and salt",
+      "Rest well",
+      "BRAT diet - Banana, Rice, Applesauce, Toast"
+    ],
+    "food_tips": [
+      "Boiled rice with curd",
+      "Banana",
+      "Coconut water",
+      "Clear soups",
+      "Avoid dairy temporarily"
+    ],
+    "avoid": [
+      "Spicy oily food",
+      "Dairy products (except curd)",
+      "Caffeine",
+      "Raw vegetables",
+      "Junk food"
+    ],
+    "seek_care_if": [
+      "Blood in stool",
+      "Signs of severe dehydration",
+      "Very young child or elderly affected",
+      "High fever",
+      "More than 6 episodes per day",
+      "Symptoms lasting over 2 days"
+    ]
+  },
+  "minor_cuts": {
+    "name": "Minor Cuts and Scrapes",
+    "home_care": [
+      "Wash gently with clean running water",
+      "Apply gentle pressure with clean cloth to stop bleeding",
+      "Apply turmeric paste (natural antiseptic)",
+      "Cover with clean bandage",
+      "Keep wound clean and dry"
+    ],
+    "food_tips": [
+      "Protein rich foods for healing",
+      "Vitamin C foods - oranges, lemons",
+      "Stay well hydrated"
+    ],
+    "avoid": [
+      "Touching wound with dirty hands",
+      "Removing scab prematurely"
+    ],
+    "seek_care_if": [
+      "Bleeding does not stop",
+      "Cut is deep or gaping",
+      "Signs of infection - redness, pus, warmth, fever",
+      "Animal or human bite",
+      "Tetanus vaccination not up to date"
+    ]
+  }
+}
