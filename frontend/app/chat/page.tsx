@@ -326,7 +326,16 @@ export default function ChatPage() {
             <button onClick={clearChat} title={t.clear} className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-red-400' : 'bg-white/70 border-green-200 text-green-700 hover:text-red-600'}`}>
               🗑️
             </button>
-            <a href="/" className={`text-sm px-3 sm:px-4 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-emerald-300' : 'bg-white/70 border-green-200 text-green-700'}`}>
+            <a href="/favorites" title="Favorites" className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-yellow-400' : 'bg-white/70 border-green-200 text-yellow-600'}`}>
+              ⭐
+            </a>
+            <a href="/tracker" title="Wellness Tracker" className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-blue-400' : 'bg-white/70 border-green-200 text-blue-600'}`}>
+              📊
+            </a>
+            <a href="/emergency" title="Emergency" className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-red-800 text-red-400' : 'bg-white/70 border-red-200 text-red-600'}`}>
+              🚨
+            </a>
+            <a href="/" title="Home" className={`text-sm px-3 sm:px-4 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-emerald-300' : 'bg-white/70 border-green-200 text-green-700'}`}>
               🏠
             </a>
           </div>

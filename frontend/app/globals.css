@@ -8,18 +8,25 @@
 }
 
 body {
-  color: #1B4332;
+  color: var(--text-primary, #1B4332);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: var(--base-font-size, 16px);
 }
 
 .dark body {
   color: #d1fae5;
 }
 
-/* Scrollbar */
+/* Font size classes */
+.text-size-small { font-size: 14px; }
+.text-size-medium { font-size: 16px; }
+.text-size-large { font-size: 18px; }
+.text-size-xlarge { font-size: 20px; }
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -48,55 +55,38 @@ body {
   50% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
 }
 
+@keyframes slide-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
 .pulse-green {
   animation: pulse-green 2s infinite;
 }
 
+.slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
 /* Markdown styling */
-.prose-message strong {
-  font-weight: 700;
-  color: #065f46;
-}
-
-.dark .prose-message strong {
-  color: #6ee7b7;
-}
-
-.prose-message ul {
-  list-style: disc;
-  padding-left: 1.25rem;
-  margin: 0.5rem 0;
-}
-
-.prose-message ol {
-  list-style: decimal;
-  padding-left: 1.25rem;
-  margin: 0.5rem 0;
-}
-
-.prose-message li {
-  margin: 0.25rem 0;
-}
-
+.prose-message strong { font-weight: 700; color: #065f46; }
+.dark .prose-message strong { color: #6ee7b7; }
+.prose-message ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+.prose-message ol { list-style: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+.prose-message li { margin: 0.25rem 0; }
 .prose-message h1, .prose-message h2, .prose-message h3 {
-  font-weight: 700;
-  margin: 0.75rem 0 0.5rem;
-  color: #065f46;
+  font-weight: 700; margin: 0.75rem 0 0.5rem; color: #065f46;
 }
-
-.dark .prose-message h1,
-.dark .prose-message h2,
-.dark .prose-message h3 {
-  color: #6ee7b7;
-}
-
+.dark .prose-message h1, .dark .prose-message h2, .dark .prose-message h3 { color: #6ee7b7; }
 .prose-message code {
-  background: rgba(0,0,0,0.05);
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  font-size: 0.85em;
+  background: rgba(0,0,0,0.05); padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem; font-size: 0.85em;
 }
+.dark .prose-message code { background: rgba(255,255,255,0.1); }
 
-.dark .prose-message code {
-  background: rgba(255,255,255,0.1);
-}
+/* Theme classes */
+.theme-forest { --accent: #065f46; }
+.theme-ocean { --accent: #0369a1; }
+.theme-sunset { --accent: #c2410c; }
+.theme-lavender { --accent: #7c3aed; }
+.theme-rose { --accent: #be185d; }
