@@ -7,44 +7,95 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+:root {
+  --theme-primary: #065f46;
+  --theme-secondary: #10b981;
+  --theme-accent: #6ee7b7;
+}
+
+/* Theme: Forest (default) */
+.theme-forest {
+  --theme-primary: #065f46;
+  --theme-secondary: #10b981;
+  --theme-accent: #6ee7b7;
+  --theme-bg-from: #ecfdf5;
+  --theme-bg-via: #d1fae5;
+  --theme-bg-to: #ccfbf1;
+  --theme-bg-dark-from: #111827;
+  --theme-bg-dark-via: #022c22;
+  --theme-bg-dark-to: #064e3b;
+}
+
+/* Theme: Ocean */
+.theme-ocean {
+  --theme-primary: #0369a1;
+  --theme-secondary: #06b6d4;
+  --theme-accent: #67e8f9;
+  --theme-bg-from: #eff6ff;
+  --theme-bg-via: #dbeafe;
+  --theme-bg-to: #cffafe;
+  --theme-bg-dark-from: #0c1e3e;
+  --theme-bg-dark-via: #0e2a4d;
+  --theme-bg-dark-to: #164e63;
+}
+
+/* Theme: Sunset */
+.theme-sunset {
+  --theme-primary: #c2410c;
+  --theme-secondary: #f97316;
+  --theme-accent: #fed7aa;
+  --theme-bg-from: #fff7ed;
+  --theme-bg-via: #ffedd5;
+  --theme-bg-to: #fef3c7;
+  --theme-bg-dark-from: #431407;
+  --theme-bg-dark-via: #7c2d12;
+  --theme-bg-dark-to: #9a3412;
+}
+
+/* Theme: Lavender */
+.theme-lavender {
+  --theme-primary: #7c3aed;
+  --theme-secondary: #a78bfa;
+  --theme-accent: #ddd6fe;
+  --theme-bg-from: #f5f3ff;
+  --theme-bg-via: #ede9fe;
+  --theme-bg-to: #fae8ff;
+  --theme-bg-dark-from: #1e1b4b;
+  --theme-bg-dark-via: #3730a3;
+  --theme-bg-dark-to: #4c1d95;
+}
+
+/* Theme: Rose */
+.theme-rose {
+  --theme-primary: #be185d;
+  --theme-secondary: #ec4899;
+  --theme-accent: #fbcfe8;
+  --theme-bg-from: #fdf2f8;
+  --theme-bg-via: #fce7f3;
+  --theme-bg-to: #fbcfe8;
+  --theme-bg-dark-from: #500724;
+  --theme-bg-dark-via: #831843;
+  --theme-bg-dark-to: #9d174d;
+}
+
 body {
-  color: var(--text-primary, #1B4332);
+  color: #1B4332;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
-  font-size: var(--base-font-size, 16px);
 }
 
-.dark body {
-  color: #d1fae5;
-}
+.dark body { color: #d1fae5; }
 
-/* Font size classes */
-.text-size-small { font-size: 14px; }
-.text-size-medium { font-size: 16px; }
-.text-size-large { font-size: 18px; }
-.text-size-xlarge { font-size: 20px; }
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: rgba(6, 95, 70, 0.2);
   border-radius: 10px;
 }
+.dark ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.3);
-}
-
-/* Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -55,20 +106,19 @@ body {
   50% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
 }
 
-@keyframes slide-in {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
 }
 
-.pulse-green {
-  animation: pulse-green 2s infinite;
+.pulse-green { animation: pulse-green 2s infinite; }
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
 }
 
-.slide-in {
-  animation: slide-in 0.3s ease-out;
-}
-
-/* Markdown styling */
 .prose-message strong { font-weight: 700; color: #065f46; }
 .dark .prose-message strong { color: #6ee7b7; }
 .prose-message ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
@@ -83,10 +133,3 @@ body {
   border-radius: 0.25rem; font-size: 0.85em;
 }
 .dark .prose-message code { background: rgba(255,255,255,0.1); }
-
-/* Theme classes */
-.theme-forest { --accent: #065f46; }
-.theme-ocean { --accent: #0369a1; }
-.theme-sunset { --accent: #c2410c; }
-.theme-lavender { --accent: #7c3aed; }
-.theme-rose { --accent: #be185d; }

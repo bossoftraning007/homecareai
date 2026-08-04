@@ -37,9 +37,12 @@ const dailyTips = [
 
 const quickNav = [
   { icon: '💬', label: 'Chat', href: '/chat', color: 'from-green-500 to-emerald-500' },
+  { icon: '📖', label: 'Library', href: '/library', color: 'from-teal-500 to-cyan-500' },
   { icon: '⭐', label: 'Favorites', href: '/favorites', color: 'from-yellow-500 to-orange-500' },
-  { icon: '📊', label: 'Tracker', href: '/tracker', color: 'from-blue-500 to-cyan-500' },
+  { icon: '📊', label: 'Tracker', href: '/tracker', color: 'from-blue-500 to-indigo-500' },
+  { icon: '⏰', label: 'Reminders', href: '/reminders', color: 'from-purple-500 to-pink-500' },
   { icon: '🚨', label: 'Emergency', href: '/emergency', color: 'from-red-500 to-orange-500' },
+  { icon: '⚙️', label: 'Settings', href: '/settings', color: 'from-gray-500 to-slate-600' },
 ]
 
 export default function Home() {
@@ -53,6 +56,9 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
     setTipIndex(Math.floor(Math.random() * dailyTips.length))
+    const savedTheme = localStorage.getItem('homecare_color_theme') || 'forest'
+    document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, '')
+    document.documentElement.classList.add(`theme-${savedTheme}`)
   }, [])
 
   const filteredSymptoms = symptoms.filter(s =>
@@ -61,10 +67,7 @@ export default function Home() {
 
   const handleSymptom = (value: string, label: string) => {
     localStorage.setItem('initial_message', value)
-    toast.success(`Checking remedies for ${label}...`, {
-      icon: '🌿',
-      style: { background: '#065f46', color: '#fff' },
-    })
+    toast.success(`Checking remedies for ${label}...`, { icon: '🌿' })
     setTimeout(() => router.push('/chat'), 500)
   }
 
@@ -133,7 +136,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-4 gap-2 mb-6 w-full max-w-md"
+          className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-6 w-full max-w-3xl"
         >
           {quickNav.map((nav, i) => (
             <motion.a
@@ -142,11 +145,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + i * 0.05 }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -3 }}
               whileTap={{ scale: 0.95 }}
-              className={`bg-gradient-to-r ${nav.color} p-3 rounded-2xl text-white text-center shadow-md hover:shadow-lg transition-all`}
+              className={`bg-gradient-to-r ${nav.color} p-2 sm:p-3 rounded-2xl text-white text-center shadow-md hover:shadow-lg transition-all`}
             >
-              <div className="text-2xl">{nav.icon}</div>
+              <div className="text-xl sm:text-2xl">{nav.icon}</div>
               <div className="text-xs font-semibold mt-1">{nav.label}</div>
             </motion.a>
           ))}
@@ -159,12 +162,12 @@ export default function Home() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍 Search symptoms..."
-            className={`w-full px-4 py-2 rounded-full text-sm outline-none backdrop-blur-sm border transition-all ${isDark ? 'bg-gray-800/70 text-emerald-100 placeholder:text-emerald-300/50 border-emerald-800' : 'bg-white/70 text-green-900 placeholder:text-green-600/60 border-green-200'}`}
+            className={`w-full px-4 py-2 rounded-full text-sm outline-none backdrop-blur-sm border ${isDark ? 'bg-gray-800/70 text-emerald-100 placeholder:text-emerald-300/50 border-emerald-800' : 'bg-white/70 text-green-900 placeholder:text-green-600/60 border-green-200'}`}
           />
         </motion.div>
 
         {/* Symptoms */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }} className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3 mb-6 w-full max-w-4xl">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 w-full max-w-4xl">
           {filteredSymptoms.map((s, index) => (
             <motion.button
               key={s.label}
@@ -174,7 +177,7 @@ export default function Home() {
               whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleSymptom(s.value, s.label)}
-              className={`group flex flex-col items-center justify-center p-4 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer border backdrop-blur-sm ${isDark ? 'bg-gray-800/60 border-emerald-800 hover:bg-gray-800 hover:border-emerald-600' : 'bg-white/70 border-green-200 hover:bg-white hover:border-green-400'}`}
+              className={`group flex flex-col items-center justify-center p-4 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer border backdrop-blur-sm ${isDark ? 'bg-gray-800/60 border-emerald-800 hover:bg-gray-800' : 'bg-white/70 border-green-200 hover:bg-white'}`}
             >
               <span className="text-3xl mb-2 group-hover:scale-125 transition-transform">{s.icon}</span>
               <span className={`text-xs font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>{s.label}</span>
