@@ -1,3 +1,28 @@
+function AdminButton() {
+  const { user } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('profiles').select('is_admin').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data?.is_admin) setIsAdmin(true)
+      })
+  }, [user])
+
+  if (!isAdmin) return null
+
+  return (
+    <motion.a
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      href="/admin"
+      className="block bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 rounded-2xl font-semibold text-center shadow-md hover:from-yellow-600 hover:to-orange-600 transition-all"
+    >
+      👑 Admin Dashboard
+    </motion.a>
+  )
+}
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -130,7 +155,8 @@ export default function ProfilePage() {
             </div>
           ))}
         </motion.div>
-
+{/* Admin link (only for admins) */}
+<AdminButton />
         {/* Quick Links */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
