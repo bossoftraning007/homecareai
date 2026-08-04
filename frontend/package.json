@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/supabase-js": "^2.112.0",
     "axios": "^1.19.0",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.43.0",

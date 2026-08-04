@@ -42,9 +42,9 @@ const quickNav = [
   { icon: '📊', label: 'Tracker', href: '/tracker', color: 'from-blue-500 to-indigo-500' },
   { icon: '⏰', label: 'Reminders', href: '/reminders', color: 'from-purple-500 to-pink-500' },
   { icon: '🚨', label: 'Emergency', href: '/emergency', color: 'from-red-500 to-orange-500' },
+  { icon: '👤', label: 'Profile', href: '/profile', color: 'from-indigo-500 to-purple-500' },
   { icon: '⚙️', label: 'Settings', href: '/settings', color: 'from-gray-500 to-slate-600' },
 ]
-
 export default function Home() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
@@ -136,7 +136,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-6 w-full max-w-3xl"
+          className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-6 w-full max-w-4xl"
         >
           {quickNav.map((nav, i) => (
             <motion.a
