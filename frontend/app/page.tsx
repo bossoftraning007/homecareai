@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import { useTheme } from 'next-themes'
+import { useAuth } from '@/lib/useAuth'
 
 const symptoms = [
   { icon: '🤧', label: 'Cold', value: 'I have a cold and blocked nose' },
@@ -42,12 +43,13 @@ const quickNav = [
   { icon: '📊', label: 'Tracker', href: '/tracker', color: 'from-blue-500 to-indigo-500' },
   { icon: '⏰', label: 'Reminders', href: '/reminders', color: 'from-purple-500 to-pink-500' },
   { icon: '🚨', label: 'Emergency', href: '/emergency', color: 'from-red-500 to-orange-500' },
-  { icon: '👤', label: 'Profile', href: '/profile', color: 'from-indigo-500 to-purple-500' },
   { icon: '⚙️', label: 'Settings', href: '/settings', color: 'from-gray-500 to-slate-600' },
 ]
+
 export default function Home() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const { user, signOut } = useAuth()
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const [mounted, setMounted] = useState(false)
@@ -82,9 +84,17 @@ export default function Home() {
     setTimeout(() => router.push('/chat'), 500)
   }
 
+  const handleLogout = async () => {
+    if (confirm('Logout?')) {
+      await signOut()
+      toast.success('Logged out!', { icon: '👋' })
+    }
+  }
+
   if (!mounted) return null
 
   const isDark = theme === 'dark'
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0]
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -110,12 +120,45 @@ export default function Home() {
           >
             {dailyTips[tipIndex]}
           </motion.div>
-          <button
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className={`p-2 rounded-full shadow-lg transition-all backdrop-blur-sm ${isDark ? 'bg-gray-800/70 text-yellow-300' : 'bg-white/70 text-gray-700'}`}
-          >
-            {isDark ? '☀️' : '🌙'}
-          </button>
+
+          {/* Auth buttons */}
+          <div className="flex gap-2 items-center">
+            {user ? (
+              <>
+                <a
+                  href="/profile"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-md text-sm font-semibold ${isDark ? 'bg-emerald-900/70 text-emerald-200' : 'bg-white/70 text-green-800'} border ${isDark ? 'border-emerald-800' : 'border-green-200'}`}
+                >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs">
+                    {displayName?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline">{displayName}</span>
+                </a>
+                <button
+                  onClick={handleLogout}
+                  title="Logout"
+                  className={`p-2 rounded-full shadow-md ${isDark ? 'bg-red-900/70 text-red-300' : 'bg-red-50 text-red-600'} border ${isDark ? 'border-red-800' : 'border-red-200'}`}
+                >
+                  🚪
+                </button>
+              </>
+            ) : (
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href="/login"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md"
+              >
+                🔐 Login / Signup
+              </motion.a>
+            )}
+            <button
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className={`p-2 rounded-full shadow-lg transition-all backdrop-blur-sm ${isDark ? 'bg-gray-800/70 text-yellow-300' : 'bg-white/70 text-gray-700'}`}
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
+          </div>
         </div>
 
         {/* Header */}
@@ -129,6 +172,15 @@ export default function Home() {
           <p className={`mt-2 text-sm font-medium ${isDark ? 'text-emerald-200/80' : 'text-green-800/70'}`}>
             Natural home remedies • Ancient wisdom • Modern care
           </p>
+          {user && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={`mt-1 text-sm font-semibold ${isDark ? 'text-emerald-300' : 'text-green-700'}`}
+            >
+              Welcome back, {displayName}! 💚
+            </motion.p>
+          )}
         </motion.div>
 
         {/* Quick Nav */}
@@ -136,7 +188,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-6 w-full max-w-4xl"
+          className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-6 w-full max-w-3xl"
         >
           {quickNav.map((nav, i) => (
             <motion.a
@@ -198,6 +250,30 @@ export default function Home() {
             Heal 🌿
           </motion.button>
         </motion.form>
+
+        {/* Cloud sync banner (if not logged in) */}
+        {!user && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className={`mt-6 p-4 rounded-2xl max-w-2xl w-full text-center backdrop-blur-sm border ${isDark ? 'bg-emerald-900/30 border-emerald-800' : 'bg-white/50 border-green-200'}`}
+          >
+            <div className="text-2xl mb-2">☁️</div>
+            <p className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
+              Login to sync your data across devices!
+            </p>
+            <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
+              Save chats, favorites, and wellness tracking to the cloud ✨
+            </p>
+            <a
+              href="/login"
+              className="inline-block mt-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-md hover:from-green-700 hover:to-emerald-700"
+            >
+              Get Started - Free! 🚀
+            </a>
+          </motion.div>
+        )}
 
         <p className={`text-xs mt-6 text-center max-w-md backdrop-blur-sm rounded-full px-4 py-2 border ${isDark ? 'bg-gray-800/50 border-emerald-800 text-emerald-300/70' : 'bg-white/50 border-green-200 text-green-800/60'}`}>
           For minor symptoms only • Not a substitute for medical advice
