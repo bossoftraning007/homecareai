@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
 import type { User } from '@supabase/supabase-js'
 
 export function useAuth() {
@@ -8,8 +8,15 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setLoading(false)
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
+      setLoading(false)
+    }).catch(() => {
       setLoading(false)
     })
 
@@ -24,6 +31,9 @@ export function useAuth() {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: { message: 'Auth not configured' } as any }
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -32,6 +42,9 @@ export function useAuth() {
   }
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: { message: 'Auth not configured' } as any }
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -43,6 +56,9 @@ export function useAuth() {
   }
 
   const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: { message: 'Auth not configured' } as any }
+    }
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -53,6 +69,9 @@ export function useAuth() {
   }
 
   const signOut = async () => {
+    if (!isSupabaseConfigured()) {
+      return { error: null }
+    }
     const { error } = await supabase.auth.signOut()
     return { error }
   }
