@@ -1,3 +1,12 @@
+'use client'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import toast, { Toaster } from 'react-hot-toast'
+import { useTheme } from 'next-themes'
+import { useAuth } from '@/lib/useAuth'
+import { supabase } from '@/lib/supabase'
+
 function AdminButton() {
   const { user } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
@@ -23,14 +32,6 @@ function AdminButton() {
     </motion.a>
   )
 }
-'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import toast, { Toaster } from 'react-hot-toast'
-import { useTheme } from 'next-themes'
-import { useAuth } from '@/lib/useAuth'
-import { supabase } from '@/lib/supabase'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -135,6 +136,9 @@ export default function ProfilePage() {
           </p>
         </motion.div>
 
+        {/* Admin button (only visible if admin) */}
+        <AdminButton />
+
         {/* Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -155,8 +159,7 @@ export default function ProfilePage() {
             </div>
           ))}
         </motion.div>
-{/* Admin link (only for admins) */}
-<AdminButton />
+
         {/* Quick Links */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
