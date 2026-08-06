@@ -178,14 +178,16 @@ export default function ChatPage() {
         .eq('session_id', currentSessionId)
         .order('created_at', { ascending: true })
 
-      if (msgs && msgs.length > 0) {
-        setMessages(msgs.map(m => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-          is_emergency: m.is_emergency,
-          timestamp: m.created_at
-        })))
-      } else {
+     if (msgs && msgs.length > 0) {
+  setMessages(msgs.map(m => ({
+    role: m.role as 'user' | 'assistant',
+    content: m.content,
+    is_emergency: m.is_emergency,
+    timestamp: m.created_at,
+    followups: m.followups || [],
+    related: m.related || [],
+  })))
+} else {
         setDefaultGreeting()
       }
     } else {
@@ -262,15 +264,17 @@ export default function ChatPage() {
       const newMessages = [...updatedMessages, assistantMsg]
       setMessages(newMessages)
 
-      if (user && currentSessionId) {
-        await supabase.from('messages').insert({
-          session_id: currentSessionId,
-          user_id: user.id,
-          role: 'assistant',
-          content: res.data.reply,
-          is_emergency: res.data.is_emergency || false,
-        })
-      }
+     if (user && currentSessionId) {
+  await supabase.from('messages').insert({
+    session_id: currentSessionId,
+    user_id: user.id,
+    role: 'assistant',
+    content: res.data.reply,
+    is_emergency: res.data.is_emergency || false,
+    followups: res.data.followups || [],
+    related: res.data.related || [],
+  })
+}
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages))
 
