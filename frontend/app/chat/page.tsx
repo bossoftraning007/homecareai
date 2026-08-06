@@ -6,6 +6,8 @@ import toast, { Toaster } from 'react-hot-toast'
 import { useTheme } from 'next-themes'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useAuth } from '@/lib/useAuth'
+import { supabase } from '@/lib/supabase'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -27,7 +29,6 @@ const translations = {
     placeholder: "Describe your symptom...",
     send: "Send",
     thinking: "Thinking...",
-    home: "Home",
     clear: "Clear chat",
     clearConfirm: "Clear all chat history?",
     cleared: "Chat cleared!",
@@ -48,7 +49,6 @@ const translations = {
     placeholder: "మీ సమస్యను వివరించండి...",
     send: "పంపండి",
     thinking: "ఆలోచిస్తున్నాను...",
-    home: "హోమ్",
     clear: "క్లియర్",
     clearConfirm: "అన్ని చాట్ చరిత్రను క్లియర్ చేయాలా?",
     cleared: "చాట్ క్లియర్ అయింది!",
@@ -69,7 +69,6 @@ const translations = {
     placeholder: "अपना लक्षण बताएं...",
     send: "भेजें",
     thinking: "सोच रहा हूँ...",
-    home: "होम",
     clear: "क्लियर",
     clearConfirm: "सारी चैट क्लियर करें?",
     cleared: "चैट क्लियर!",
@@ -89,6 +88,7 @@ const translations = {
 
 export default function ChatPage() {
   const { theme, setTheme } = useTheme()
+  const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -96,6 +96,7 @@ export default function ChatPage() {
   const [isListening, setIsListening] = useState(false)
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
 
@@ -107,24 +108,6 @@ export default function ChatPage() {
     const savedLang = localStorage.getItem(LANG_KEY) as Language
     if (savedLang) setLanguage(savedLang)
 
-    const initial = localStorage.getItem('initial_message')
-    const saved = localStorage.getItem(STORAGE_KEY)
-
-    if (initial) {
-      localStorage.removeItem('initial_message')
-      const greeting: Message = {
-        role: 'assistant',
-        content: translations[savedLang || 'en'].greeting,
-        timestamp: new Date().toISOString()
-      }
-      setMessages([greeting])
-      setTimeout(() => sendMessage(initial), 500)
-    } else if (saved) {
-      try { setMessages(JSON.parse(saved)) } catch { setDefaultGreeting(savedLang || 'en') }
-    } else {
-      setDefaultGreeting(savedLang || 'en')
-    }
-
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition
       recognitionRef.current = new SpeechRecognition()
@@ -134,7 +117,29 @@ export default function ChatPage() {
   }, [])
 
   useEffect(() => {
-    if (messages.length > 0) localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+    if (!mounted) return
+
+    const initial = localStorage.getItem('initial_message')
+    if (initial) {
+      localStorage.removeItem('initial_message')
+      const greeting: Message = {
+        role: 'assistant',
+        content: t.greeting,
+        timestamp: new Date().toISOString()
+      }
+      setMessages([greeting])
+      setTimeout(() => sendMessage(initial), 500)
+      return
+    }
+
+    if (user) {
+      loadChatFromCloud()
+    } else {
+      loadChatFromLocal()
+    }
+  }, [mounted, user])
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
@@ -145,10 +150,58 @@ export default function ChatPage() {
     }
   }, [language])
 
-  const setDefaultGreeting = (lang: Language = 'en') => {
+  const loadChatFromCloud = async () => {
+    if (!user) return
+
+    const { data: sessions } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (sessions && sessions.length > 0) {
+      const currentSessionId = sessions[0].id
+      setSessionId(currentSessionId)
+
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('session_id', currentSessionId)
+        .order('created_at', { ascending: true })
+
+      if (msgs && msgs.length > 0) {
+        setMessages(msgs.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          is_emergency: m.is_emergency,
+          timestamp: m.created_at
+        })))
+      } else {
+        setDefaultGreeting()
+      }
+    } else {
+      setDefaultGreeting()
+    }
+  }
+
+  const loadChatFromLocal = () => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      try {
+        setMessages(JSON.parse(saved))
+      } catch {
+        setDefaultGreeting()
+      }
+    } else {
+      setDefaultGreeting()
+    }
+  }
+
+  const setDefaultGreeting = () => {
     setMessages([{
       role: 'assistant',
-      content: translations[lang].greeting,
+      content: t.greeting,
       timestamp: new Date().toISOString()
     }])
   }
@@ -159,6 +212,31 @@ export default function ChatPage() {
     setMessages(updatedMessages)
     setInput('')
     setLoading(true)
+
+    let currentSessionId = sessionId
+
+    if (user) {
+      if (!currentSessionId) {
+        const { data: newSession } = await supabase
+          .from('chat_sessions')
+          .insert({ user_id: user.id, title: text.substring(0, 50) })
+          .select()
+          .single()
+        if (newSession) {
+          currentSessionId = newSession.id
+          setSessionId(currentSessionId)
+        }
+      }
+      if (currentSessionId) {
+        await supabase.from('messages').insert({
+          session_id: currentSessionId,
+          user_id: user.id,
+          role: 'user',
+          content: text,
+          is_emergency: false,
+        })
+      }
+    }
 
     try {
       const res = await axios.post(`${API_URL}/api/chat`, {
@@ -171,7 +249,20 @@ export default function ChatPage() {
         is_emergency: res.data.is_emergency,
         timestamp: new Date().toISOString()
       }
-      setMessages([...updatedMessages, assistantMsg])
+      const newMessages = [...updatedMessages, assistantMsg]
+      setMessages(newMessages)
+
+      if (user && currentSessionId) {
+        await supabase.from('messages').insert({
+          session_id: currentSessionId,
+          user_id: user.id,
+          role: 'assistant',
+          content: res.data.reply,
+          is_emergency: res.data.is_emergency || false,
+        })
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages))
 
       if (res.data.is_emergency) {
         toast.error(t.emergency, { icon: '🚨', duration: 5000 })
@@ -194,12 +285,19 @@ export default function ChatPage() {
     sendMessage(input)
   }
 
-  const clearChat = () => {
-    if (confirm(t.clearConfirm)) {
-      localStorage.removeItem(STORAGE_KEY)
-      setDefaultGreeting(language)
-      toast.success(t.cleared, { icon: '🗑️' })
+  const clearChat = async () => {
+    if (!confirm(t.clearConfirm)) return
+
+    localStorage.removeItem(STORAGE_KEY)
+
+    if (user && sessionId) {
+      await supabase.from('messages').delete().eq('session_id', sessionId)
+      await supabase.from('chat_sessions').delete().eq('id', sessionId)
+      setSessionId(null)
     }
+
+    setDefaultGreeting()
+    toast.success(t.cleared, { icon: '🗑️' })
   }
 
   const copyMessage = (content: string) => {
@@ -207,10 +305,19 @@ export default function ChatPage() {
     toast.success(t.copied, { icon: '📋' })
   }
 
-  const saveFavorite = (content: string) => {
+  const saveFavorite = async (content: string) => {
+    if (user) {
+      await supabase.from('favorites').insert({
+        user_id: user.id,
+        content: content,
+        category: null,
+      })
+    }
+
     const favs = JSON.parse(localStorage.getItem(FAV_KEY) || '[]')
     favs.push({ content, date: new Date().toISOString() })
     localStorage.setItem(FAV_KEY, JSON.stringify(favs))
+
     toast.success(t.favorited, { icon: '⭐' })
   }
 
@@ -288,7 +395,6 @@ export default function ChatPage() {
 
       <div className="relative z-10 min-h-screen flex flex-col">
 
-        {/* Header */}
         <div className={`backdrop-blur-md border-b px-4 py-3 flex items-center justify-between shadow-sm ${isDark
           ? 'bg-gray-900/70 border-emerald-900'
           : 'bg-white/70 border-green-200'
@@ -299,7 +405,8 @@ export default function ChatPage() {
               <div className={`font-bold text-base sm:text-lg leading-tight ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
                 HomeCare AI
               </div>
-              <div className={`text-xs ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
+              <div className={`text-xs flex items-center gap-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
+                {user && <span className="text-blue-500">☁️</span>}
                 {t.subtitle}
               </div>
             </div>
@@ -329,19 +436,12 @@ export default function ChatPage() {
             <a href="/favorites" title="Favorites" className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-yellow-400' : 'bg-white/70 border-green-200 text-yellow-600'}`}>
               ⭐
             </a>
-            <a href="/tracker" title="Wellness Tracker" className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-blue-400' : 'bg-white/70 border-green-200 text-blue-600'}`}>
-              📊
-            </a>
-            <a href="/emergency" title="Emergency" className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-red-800 text-red-400' : 'bg-white/70 border-red-200 text-red-600'}`}>
-              🚨
-            </a>
             <a href="/" title="Home" className={`text-sm px-3 sm:px-4 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-emerald-300' : 'bg-white/70 border-green-200 text-green-700'}`}>
               🏠
             </a>
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-3xl mx-auto w-full">
           <AnimatePresence>
             {messages.map((msg, i) => (
@@ -416,7 +516,6 @@ export default function ChatPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
         <div className={`backdrop-blur-md border-t px-4 py-3 ${isDark ? 'bg-gray-900/70 border-emerald-900' : 'bg-white/70 border-green-200'}`}>
           <form onSubmit={handleSubmit} className={`flex gap-2 max-w-3xl mx-auto rounded-full p-2 shadow-md border ${isDark ? 'bg-gray-800/80 border-emerald-900' : 'bg-white/80 border-green-200'}`}>
             <button
@@ -454,7 +553,7 @@ export default function ChatPage() {
             </motion.button>
           </form>
           <p className={`text-xs text-center mt-2 ${isDark ? 'text-emerald-300/60' : 'text-green-800/60'}`}>
-            {t.disclaimer}
+            {t.disclaimer} {user && <span className="text-blue-500">• ☁️ Cloud synced</span>}
           </p>
         </div>
 
