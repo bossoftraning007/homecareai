@@ -14,6 +14,8 @@ type Message = {
   content: string
   is_emergency?: boolean
   timestamp?: string
+  followups?: string[]
+  related?: string[]
 }
 
 type Language = 'en' | 'te' | 'hi'
@@ -43,6 +45,8 @@ const translations = {
     favorited: "Saved to favorites!",
     speak: "Read aloud",
     stop: "Stop reading",
+    followUps: "💡 Follow-up questions",
+    related: "🔗 Related concerns",
   },
   te: {
     greeting: "నమస్తే! నేను HomeCare AI 🌿\n\nసహజ నివారణలతో నేను మీకు సహాయం చేస్తాను.\n\nఈరోజు మీరు ఎలా ఉన్నారు? 💚",
@@ -63,6 +67,8 @@ const translations = {
     favorited: "ఇష్టాలలో సేవ్!",
     speak: "చదవండి",
     stop: "ఆపు",
+    followUps: "💡 తదుపరి ప్రశ్నలు",
+    related: "🔗 సంబంధిత సమస్యలు",
   },
   hi: {
     greeting: "नमस्ते! मैं HomeCare AI हूँ 🌿\n\n**प्राकृतिक उपचार** से मदद करूँगा।\n\nआज कैसा महसूस कर रहे हैं? 💚",
@@ -83,6 +89,8 @@ const translations = {
     favorited: "पसंदीदा में सहेजा!",
     speak: "पढ़ें",
     stop: "रोकें",
+    followUps: "💡 अगले सवाल",
+    related: "🔗 संबंधित समस्याएं",
   }
 }
 
@@ -247,7 +255,9 @@ export default function ChatPage() {
         role: 'assistant',
         content: res.data.reply,
         is_emergency: res.data.is_emergency,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        followups: res.data.followups || [],
+        related: res.data.related || [],
       }
       const newMessages = [...updatedMessages, assistantMsg]
       setMessages(newMessages)
@@ -283,6 +293,14 @@ export default function ChatPage() {
     e.preventDefault()
     if (!input.trim() || loading) return
     sendMessage(input)
+  }
+
+  const handleFollowup = (question: string) => {
+    sendMessage(question)
+  }
+
+  const handleRelated = (symptom: string) => {
+    sendMessage(`Tell me about ${symptom}`)
   }
 
   const clearChat = async () => {
@@ -381,6 +399,9 @@ export default function ChatPage() {
   }
 
   if (!mounted) return null
+
+  const lastMessage = messages[messages.length - 1]
+  const showSuggestions = lastMessage?.role === 'assistant' && !loading && (lastMessage.followups?.length || lastMessage.related?.length)
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 ${isDark
@@ -509,6 +530,72 @@ export default function ChatPage() {
                     <span className={`text-xs ml-2 ${isDark ? 'text-emerald-300' : 'text-green-700'}`}>{t.thinking}</span>
                   </div>
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Follow-up suggestions */}
+          {showSuggestions && lastMessage.followups && lastMessage.followups.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="ml-10"
+            >
+              <div className={`text-xs mb-2 font-semibold ${isDark ? 'text-emerald-300' : 'text-green-700'}`}>
+                {t.followUps}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {lastMessage.followups.map((q, i) => (
+                  <motion.button
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 + i * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleFollowup(q)}
+                    className={`text-xs px-3 py-2 rounded-full border shadow-sm transition-all ${isDark
+                      ? 'bg-emerald-900/40 border-emerald-700 text-emerald-200 hover:bg-emerald-800/60'
+                      : 'bg-white border-green-300 text-green-800 hover:bg-green-50 hover:border-green-400'
+                    }`}
+                  >
+                    💬 {q}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Related symptoms */}
+          {showSuggestions && lastMessage.related && lastMessage.related.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="ml-10"
+            >
+              <div className={`text-xs mb-2 font-semibold ${isDark ? 'text-emerald-300' : 'text-green-700'}`}>
+                {t.related}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {lastMessage.related.map((s, i) => (
+                  <motion.button
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 + i * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleRelated(s)}
+                    className={`text-xs px-3 py-2 rounded-full border shadow-sm transition-all ${isDark
+                      ? 'bg-blue-900/40 border-blue-700 text-blue-200 hover:bg-blue-800/60'
+                      : 'bg-blue-50 border-blue-300 text-blue-800 hover:bg-blue-100 hover:border-blue-400'
+                    }`}
+                  >
+                    🔗 {s}
+                  </motion.button>
+                ))}
               </div>
             </motion.div>
           )}

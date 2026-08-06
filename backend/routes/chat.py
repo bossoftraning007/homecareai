@@ -19,41 +19,46 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     is_emergency: bool
+    followups: List[str] = []
+    related: List[str] = []
 
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """Handle chat messages with safety checks."""
 
-    # Get latest user message
     latest_message = ""
     for msg in reversed(request.messages):
         if msg.role == "user":
             latest_message = msg.content
             break
 
-    # Red flag check first
+    # Red flag check
     if check_red_flags(latest_message):
         return ChatResponse(
             reply=get_urgent_message(),
-            is_emergency=True
+            is_emergency=True,
+            followups=[],
+            related=[]
         )
 
-    # Convert to dict format for OpenAI
     messages_dict = [
         {"role": msg.role, "content": msg.content}
         for msg in request.messages
     ]
 
-    # Get AI response
     try:
-        reply = get_ai_response(messages_dict)
+        result = get_ai_response(messages_dict)
         return ChatResponse(
-            reply=reply,
-            is_emergency=False
+            reply=result["reply"],
+            is_emergency=False,
+            followups=result.get("followups", []),
+            related=result.get("related", [])
         )
     except Exception as e:
         return ChatResponse(
             reply=f"❌ Sorry, something went wrong: {str(e)}",
-            is_emergency=False
+            is_emergency=False,
+            followups=[],
+            related=[]
         )
