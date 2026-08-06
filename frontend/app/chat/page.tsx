@@ -45,7 +45,7 @@ const translations = {
     favorited: "Saved to favorites!",
     speak: "Read aloud",
     stop: "Stop reading",
-    followUps: "💡 Follow-up questions",
+    followUps: "💡 You might also ask",
     related: "🔗 Related concerns",
   },
   te: {
@@ -67,7 +67,7 @@ const translations = {
     favorited: "ఇష్టాలలో సేవ్!",
     speak: "చదవండి",
     stop: "ఆపు",
-    followUps: "💡 తదుపరి ప్రశ్నలు",
+    followUps: "💡 మీరు ఇలా అడగవచ్చు",
     related: "🔗 సంబంధిత సమస్యలు",
   },
   hi: {
@@ -89,7 +89,7 @@ const translations = {
     favorited: "पसंदीदा में सहेजा!",
     speak: "पढ़ें",
     stop: "रोकें",
-    followUps: "💡 अगले सवाल",
+    followUps: "💡 आप यह भी पूछ सकते हैं",
     related: "🔗 संबंधित समस्याएं",
   }
 }
@@ -401,7 +401,7 @@ export default function ChatPage() {
   if (!mounted) return null
 
   const lastMessage = messages[messages.length - 1]
-  const showSuggestions = lastMessage?.role === 'assistant' && !loading && (lastMessage.followups?.length || lastMessage.related?.length)
+  const showSuggestions = lastMessage?.role === 'assistant' && !loading && ((lastMessage.followups && lastMessage.followups.length > 0) || (lastMessage.related && lastMessage.related.length > 0))
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-colors duration-500 ${isDark
