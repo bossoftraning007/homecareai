@@ -3,10 +3,14 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import { useTheme } from 'next-themes'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { useAuth } from '@/lib/useAuth'
+import { supabase } from '@/lib/supabase'
 
 type TrackEntry = {
-  date: string
+  id?: string
+  date?: string
+  entry_date?: string
   mood: number
   water: number
   sleep: number
@@ -17,6 +21,7 @@ const TRACKER_KEY = 'homecare_tracker'
 
 export default function TrackerPage() {
   const { theme } = useTheme()
+  const { user } = useAuth()
   const [entries, setEntries] = useState<TrackEntry[]>([])
   const [mounted, setMounted] = useState(false)
   const [todayMood, setTodayMood] = useState(3)
@@ -28,13 +33,56 @@ export default function TrackerPage() {
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    if (user) {
+      loadFromCloud()
+    } else {
+      loadFromLocal()
+    }
+  }, [mounted, user])
+
+  const loadFromCloud = async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('wellness_entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('entry_date', { ascending: true })
+
+    if (data) {
+      const mapped = data.map(e => ({
+        id: e.id,
+        entry_date: e.entry_date,
+        date: e.entry_date,
+        mood: e.mood,
+        water: e.water,
+        sleep: e.sleep,
+        exercise: e.exercise,
+      }))
+      setEntries(mapped)
+
+      const today = new Date().toISOString().split('T')[0]
+      const todayEntry = mapped.find(e => e.entry_date === today)
+      if (todayEntry) {
+        setTodayMood(todayEntry.mood)
+        setTodayWater(todayEntry.water)
+        setTodaySleep(todayEntry.sleep)
+        setTodayExercise(todayEntry.exercise)
+      }
+    }
+  }
+
+  const loadFromLocal = () => {
     const saved = localStorage.getItem(TRACKER_KEY)
     if (saved) {
       try {
         const data = JSON.parse(saved)
         setEntries(data)
         const today = new Date().toDateString()
-        const todayEntry = data.find((e: TrackEntry) => new Date(e.date).toDateString() === today)
+        const todayEntry = data.find((e: TrackEntry) => new Date(e.date || '').toDateString() === today)
         if (todayEntry) {
           setTodayMood(todayEntry.mood)
           setTodayWater(todayEntry.water)
@@ -43,26 +91,44 @@ export default function TrackerPage() {
         }
       } catch { }
     }
-  }, [])
+  }
 
-  const saveToday = () => {
-    const today = new Date().toDateString()
-    const filtered = entries.filter(e => new Date(e.date).toDateString() !== today)
-    const newEntry: TrackEntry = {
-      date: new Date().toISOString(),
-      mood: todayMood,
-      water: todayWater,
-      sleep: todaySleep,
-      exercise: todayExercise
+  const saveToday = async () => {
+    const today = new Date().toISOString().split('T')[0]
+
+    if (user) {
+      await supabase.from('wellness_entries').upsert({
+        user_id: user.id,
+        entry_date: today,
+        mood: todayMood,
+        water: todayWater,
+        sleep: todaySleep,
+        exercise: todayExercise,
+      }, { onConflict: 'user_id,entry_date' })
+
+      loadFromCloud()
+    } else {
+      const filtered = entries.filter(e => {
+        const eDate = e.date ? new Date(e.date).toDateString() : ''
+        return eDate !== new Date().toDateString()
+      })
+      const newEntry: TrackEntry = {
+        date: new Date().toISOString(),
+        mood: todayMood,
+        water: todayWater,
+        sleep: todaySleep,
+        exercise: todayExercise
+      }
+      const updated = [...filtered, newEntry]
+      setEntries(updated)
+      localStorage.setItem(TRACKER_KEY, JSON.stringify(updated))
     }
-    const updated = [...filtered, newEntry].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    setEntries(updated)
-    localStorage.setItem(TRACKER_KEY, JSON.stringify(updated))
+
     toast.success('Saved!', { icon: '📊' })
   }
 
   const chartData = entries.slice(-7).map(e => ({
-    date: new Date(e.date).toLocaleDateString('en', { weekday: 'short' }),
+    date: new Date(e.date || e.entry_date || '').toLocaleDateString('en', { weekday: 'short' }),
     mood: e.mood,
     water: e.water,
     sleep: e.sleep
@@ -79,7 +145,6 @@ export default function TrackerPage() {
     }`}>
       <Toaster position="top-center" />
 
-      {/* Header */}
       <div className={`backdrop-blur-md border-b px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-10 ${isDark ? 'bg-gray-900/70 border-emerald-900' : 'bg-white/70 border-green-200'}`}>
         <div className="flex items-center gap-2">
           <span className="text-2xl">📊</span>
@@ -87,7 +152,8 @@ export default function TrackerPage() {
             <div className={`font-bold text-lg ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
               Wellness Tracker
             </div>
-            <div className={`text-xs ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
+            <div className={`text-xs flex items-center gap-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
+              {user && <span className="text-blue-500">☁️</span>}
               Track your daily health
             </div>
           </div>
@@ -99,7 +165,12 @@ export default function TrackerPage() {
 
       <div className="max-w-3xl mx-auto p-4 space-y-6">
 
-        {/* Today's tracking */}
+        {!user && (
+          <div className={`p-3 rounded-xl text-center text-sm ${isDark ? 'bg-yellow-900/30 text-yellow-300' : 'bg-yellow-50 text-yellow-700'}`}>
+            💡 <a href="/login" className="underline font-semibold">Login</a> to sync tracker across devices!
+          </div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -109,7 +180,6 @@ export default function TrackerPage() {
             🌟 Today's Check-in
           </h2>
 
-          {/* Mood */}
           <div className="mb-4">
             <label className={`text-sm font-semibold mb-2 block ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
               How are you feeling? {moodEmojis[todayMood - 1]}
@@ -130,7 +200,6 @@ export default function TrackerPage() {
             </div>
           </div>
 
-          {/* Water */}
           <div className="mb-4">
             <label className={`text-sm font-semibold mb-2 block ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
               💧 Water glasses: {todayWater}/8
@@ -150,7 +219,6 @@ export default function TrackerPage() {
             </div>
           </div>
 
-          {/* Sleep */}
           <div className="mb-4">
             <label className={`text-sm font-semibold mb-2 block ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
               💤 Sleep hours: {todaySleep}
@@ -165,7 +233,6 @@ export default function TrackerPage() {
             />
           </div>
 
-          {/* Exercise */}
           <div className="mb-4">
             <button
               onClick={() => setTodayExercise(!todayExercise)}
@@ -182,11 +249,10 @@ export default function TrackerPage() {
             onClick={saveToday}
             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 shadow-md transition-all"
           >
-            💾 Save Today's Check-in
+            💾 Save Today's Check-in {user && '☁️'}
           </button>
         </motion.div>
 
-        {/* Chart */}
         {chartData.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -210,7 +276,6 @@ export default function TrackerPage() {
           </motion.div>
         )}
 
-        {/* Stats */}
         {entries.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
