@@ -40,7 +40,7 @@ const quickNav = [
   { icon: '🎤', label: 'Voice', href: '/voice', color: 'from-purple-500 to-pink-500' },
   { icon: '💬', label: 'Chat', href: '/chat', color: 'from-green-500 to-emerald-500' },
   { icon: '📋', label: 'Assess', href: '/questionnaire', color: 'from-indigo-500 to-purple-500' },
-  { icon: '📖', label: 'Library', href: '/library', color: 'from-teal-500 to-cyan-500' },
+  { icon: '📖', label: 'Symptoms', href: '/symptoms', color: 'from-teal-500 to-cyan-500' },
   { icon: '⭐', label: 'Favorites', href: '/favorites', color: 'from-yellow-500 to-orange-500' },
   { icon: '📊', label: 'Tracker', href: '/tracker', color: 'from-blue-500 to-indigo-500' },
   { icon: '⏰', label: 'Reminders', href: '/reminders', color: 'from-purple-500 to-pink-500' },
@@ -190,7 +190,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-6 w-full max-w-4xl"
+          className="grid grid-cols-3 sm:grid-cols-9 gap-2 mb-6 w-full max-w-5xl"
         >
           {quickNav.map((nav, i) => (
             <motion.a
