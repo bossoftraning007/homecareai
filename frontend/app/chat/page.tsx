@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
+import { translations, languageOptions, getSpeechLang, type Language } from '@/lib/translations'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -18,81 +19,10 @@ type Message = {
   related?: string[]
 }
 
-type Language = 'en' | 'te' | 'hi'
-
 const API_URL = 'https://homecareai-backend.onrender.com'
 const STORAGE_KEY = 'homecare_chat_history'
 const LANG_KEY = 'homecare_language'
 const FAV_KEY = 'homecare_favorites'
-
-const translations = {
-  en: {
-    greeting: "Namaste! I'm HomeCare AI 🌿\n\nI'll help you with **natural remedies** and safe home care tips.\n\nHow are you feeling today? 💚",
-    placeholder: "Describe your symptom...",
-    send: "Send",
-    thinking: "Thinking...",
-    clear: "Clear chat",
-    clearConfirm: "Clear all chat history?",
-    cleared: "Chat cleared!",
-    copied: "Copied to clipboard!",
-    emergency: "Emergency detected! Seek medical help.",
-    error: "Connection failed. Please try again.",
-    errorMsg: "Sorry, connection failed. Please try again in a moment. 🌿",
-    disclaimer: "Natural care guidance • Not medical diagnosis",
-    subtitle: "Natural Healing Guide",
-    listening: "Listening...",
-    export: "Export chat",
-    favorited: "Saved to favorites!",
-    speak: "Read aloud",
-    stop: "Stop reading",
-    followUps: "💡 You might also ask",
-    related: "🔗 Related concerns",
-  },
-  te: {
-    greeting: "నమస్తే! నేను HomeCare AI 🌿\n\nసహజ నివారణలతో నేను మీకు సహాయం చేస్తాను.\n\nఈరోజు మీరు ఎలా ఉన్నారు? 💚",
-    placeholder: "మీ సమస్యను వివరించండి...",
-    send: "పంపండి",
-    thinking: "ఆలోచిస్తున్నాను...",
-    clear: "క్లియర్",
-    clearConfirm: "అన్ని చాట్ చరిత్రను క్లియర్ చేయాలా?",
-    cleared: "చాట్ క్లియర్ అయింది!",
-    copied: "కాపీ చేయబడింది!",
-    emergency: "అత్యవసర పరిస్థితి!",
-    error: "కనెక్షన్ విఫలమైంది.",
-    errorMsg: "క్షమించండి, కనెక్షన్ విఫలమైంది. 🌿",
-    disclaimer: "సహజ సంరక్షణ • వైద్య నిర్ధారణ కాదు",
-    subtitle: "సహజ వైద్య గైడ్",
-    listening: "వింటున్నాను...",
-    export: "ఎగుమతి",
-    favorited: "ఇష్టాలలో సేవ్!",
-    speak: "చదవండి",
-    stop: "ఆపు",
-    followUps: "💡 మీరు ఇలా అడగవచ్చు",
-    related: "🔗 సంబంధిత సమస్యలు",
-  },
-  hi: {
-    greeting: "नमस्ते! मैं HomeCare AI हूँ 🌿\n\n**प्राकृतिक उपचार** से मदद करूँगा।\n\nआज कैसा महसूस कर रहे हैं? 💚",
-    placeholder: "अपना लक्षण बताएं...",
-    send: "भेजें",
-    thinking: "सोच रहा हूँ...",
-    clear: "क्लियर",
-    clearConfirm: "सारी चैट क्लियर करें?",
-    cleared: "चैट क्लियर!",
-    copied: "कॉपी हो गया!",
-    emergency: "आपातकाल!",
-    error: "कनेक्शन विफल।",
-    errorMsg: "कनेक्शन विफल। 🌿",
-    disclaimer: "प्राकृतिक देखभाल • चिकित्सा निदान नहीं",
-    subtitle: "प्राकृतिक चिकित्सा गाइड",
-    listening: "सुन रहा हूँ...",
-    export: "एक्सपोर्ट",
-    favorited: "पसंदीदा में सहेजा!",
-    speak: "पढ़ें",
-    stop: "रोकें",
-    followUps: "💡 आप यह भी पूछ सकते हैं",
-    related: "🔗 संबंधित समस्याएं",
-  }
-}
 
 export default function ChatPage() {
   const { theme, setTheme } = useTheme()
@@ -114,7 +44,7 @@ export default function ChatPage() {
   useEffect(() => {
     setMounted(true)
     const savedLang = localStorage.getItem(LANG_KEY) as Language
-    if (savedLang) setLanguage(savedLang)
+    if (savedLang && translations[savedLang]) setLanguage(savedLang)
 
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition
@@ -154,7 +84,7 @@ export default function ChatPage() {
   useEffect(() => {
     localStorage.setItem(LANG_KEY, language)
     if (recognitionRef.current) {
-      recognitionRef.current.lang = language === 'en' ? 'en-US' : language === 'te' ? 'te-IN' : 'hi-IN'
+      recognitionRef.current.lang = getSpeechLang(language)
     }
   }, [language])
 
@@ -178,16 +108,16 @@ export default function ChatPage() {
         .eq('session_id', currentSessionId)
         .order('created_at', { ascending: true })
 
-     if (msgs && msgs.length > 0) {
-  setMessages(msgs.map(m => ({
-    role: m.role as 'user' | 'assistant',
-    content: m.content,
-    is_emergency: m.is_emergency,
-    timestamp: m.created_at,
-    followups: m.followups || [],
-    related: m.related || [],
-  })))
-} else {
+      if (msgs && msgs.length > 0) {
+        setMessages(msgs.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          is_emergency: m.is_emergency,
+          timestamp: m.created_at,
+          followups: m.followups || [],
+          related: m.related || [],
+        })))
+      } else {
         setDefaultGreeting()
       }
     } else {
@@ -264,17 +194,17 @@ export default function ChatPage() {
       const newMessages = [...updatedMessages, assistantMsg]
       setMessages(newMessages)
 
-     if (user && currentSessionId) {
-  await supabase.from('messages').insert({
-    session_id: currentSessionId,
-    user_id: user.id,
-    role: 'assistant',
-    content: res.data.reply,
-    is_emergency: res.data.is_emergency || false,
-    followups: res.data.followups || [],
-    related: res.data.related || [],
-  })
-}
+      if (user && currentSessionId) {
+        await supabase.from('messages').insert({
+          session_id: currentSessionId,
+          user_id: user.id,
+          role: 'assistant',
+          content: res.data.reply,
+          is_emergency: res.data.is_emergency || false,
+          followups: res.data.followups || [],
+          related: res.data.related || [],
+        })
+      }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages))
 
@@ -374,7 +304,7 @@ export default function ChatPage() {
     window.speechSynthesis.cancel()
     const cleanText = content.replace(/[*#`]/g, '').replace(/\n/g, ' ')
     const utterance = new SpeechSynthesisUtterance(cleanText)
-    utterance.lang = language === 'en' ? 'en-US' : language === 'te' ? 'te-IN' : 'hi-IN'
+    utterance.lang = getSpeechLang(language)
     utterance.rate = 0.9
     utterance.onend = () => setSpeakingIndex(null)
     setSpeakingIndex(index)
@@ -445,9 +375,11 @@ export default function ChatPage() {
                 : 'bg-white/70 border-green-200 text-green-800'
               }`}
             >
-              <option value="en">🇬🇧 EN</option>
-              <option value="te">🇮🇳 తె</option>
-              <option value="hi">🇮🇳 हि</option>
+              {languageOptions.map(opt => (
+                <option key={opt.code} value={opt.code}>
+                  {opt.flag} {opt.native}
+                </option>
+              ))}
             </select>
             <button onClick={() => setTheme(isDark ? 'light' : 'dark')} title="Toggle theme" className={`text-sm px-3 py-2 rounded-full border transition-all ${isDark ? 'bg-gray-800/70 border-emerald-800 text-yellow-300' : 'bg-white/70 border-green-200 text-gray-700'}`}>
               {isDark ? '☀️' : '🌙'}
@@ -538,7 +470,6 @@ export default function ChatPage() {
             </motion.div>
           )}
 
-          {/* Follow-up suggestions */}
           {showSuggestions && lastMessage.followups && lastMessage.followups.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -571,7 +502,6 @@ export default function ChatPage() {
             </motion.div>
           )}
 
-          {/* Related symptoms */}
           {showSuggestions && lastMessage.related && lastMessage.related.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
