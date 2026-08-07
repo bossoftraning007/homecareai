@@ -37,6 +37,7 @@ const dailyTips = [
 ]
 
 const quickNav = [
+  { icon: '🎤', label: 'Voice', href: '/voice', color: 'from-purple-500 to-pink-500' },
   { icon: '💬', label: 'Chat', href: '/chat', color: 'from-green-500 to-emerald-500' },
   { icon: '📖', label: 'Library', href: '/library', color: 'from-teal-500 to-cyan-500' },
   { icon: '⭐', label: 'Favorites', href: '/favorites', color: 'from-yellow-500 to-orange-500' },
