@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
-import anime from 'animejs'
+import { animate, stagger } from 'animejs'
 
 interface AnimatedTextProps {
   text: string
@@ -20,13 +20,14 @@ export default function AnimatedText({ text, className = '', delay = 0 }: Animat
 
     textRef.current.innerHTML = letters
 
-    anime({
-      targets: textRef.current.querySelectorAll('span'),
+    const spans = textRef.current.querySelectorAll('span')
+
+    animate(spans, {
       translateY: [50, 0],
       opacity: [0, 1],
       easing: 'easeOutExpo',
       duration: 1500,
-      delay: anime.stagger(30, { start: delay }),
+      delay: stagger(30, { start: delay }),
     })
   }, [text, delay])
 
