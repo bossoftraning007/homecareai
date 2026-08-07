@@ -1,6 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import { animate, stagger } from 'animejs'
+import { motion } from 'framer-motion'
 
 interface AnimatedTextProps {
   text: string
@@ -9,27 +8,23 @@ interface AnimatedTextProps {
 }
 
 export default function AnimatedText({ text, className = '', delay = 0 }: AnimatedTextProps) {
-  const textRef = useRef<HTMLSpanElement>(null)
-
-  useEffect(() => {
-    if (!textRef.current) return
-
-    const letters = text.split('').map(letter =>
-      letter === ' ' ? '<span>&nbsp;</span>' : `<span class="inline-block">${letter}</span>`
-    ).join('')
-
-    textRef.current.innerHTML = letters
-
-    const spans = textRef.current.querySelectorAll('span')
-
-    animate(spans, {
-      translateY: [50, 0],
-      opacity: [0, 1],
-      easing: 'easeOutExpo',
-      duration: 1500,
-      delay: stagger(30, { start: delay }),
-    })
-  }, [text, delay])
-
-  return <span ref={textRef} className={className} />
+  return (
+    <span className={className}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{
+            duration: 0.5,
+            delay: delay + i * 0.03,
+            ease: 'easeOut',
+          }}
+          className="inline-block"
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </span>
+  )
 }
