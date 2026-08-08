@@ -43,6 +43,14 @@ const features = [
     glow: 'shadow-purple-500/20',
   },
   {
+    icon: '🌦️',
+    title: 'Seasonal Guide',
+    desc: 'Know what health problems this season brings and how to prevent them.',
+    color: 'from-sky-500/20 to-blue-500/20',
+    border: 'border-sky-500/30',
+    glow: 'shadow-sky-500/20',
+  },
+  {
     icon: '🌍',
     title: '10 Languages',
     desc: 'Telugu, Hindi, Tamil, English and 6 more regional languages.',
