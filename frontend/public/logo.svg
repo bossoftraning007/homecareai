@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#134e4a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#065f46;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#grad2)" />
+
+  <!-- Leaf shape -->
+  <path d="M50 15 C65 25, 75 40, 70 58 C65 72, 52 78, 50 78 C48 78, 35 72, 30 58 C25 40, 35 25, 50 15Z"
+        fill="url(#grad1)" opacity="0.9"/>
+
+  <!-- Leaf vein center -->
+  <line x1="50" y1="20" x2="50" y2="75"
+        stroke="#134e4a" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Leaf veins left -->
+  <line x1="50" y1="35" x2="37" y2="48"
+        stroke="#134e4a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  <line x1="50" y1="48" x2="35" y2="58"
+        stroke="#134e4a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Leaf veins right -->
+  <line x1="50" y1="35" x2="63" y2="48"
+        stroke="#134e4a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  <line x1="50" y1="48" x2="65" y2="58"
+        stroke="#134e4a" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- AI dot accent top right -->
+  <circle cx="72" cy="28" r="8" fill="#22c55e" opacity="0.9"/>
+  <circle cx="72" cy="28" r="4" fill="#ffffff" opacity="0.9"/>
+  <circle cx="72" cy="28" r="2" fill="#22c55e" opacity="1"/>
+</svg>

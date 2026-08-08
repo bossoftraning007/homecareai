@@ -12,6 +12,11 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'HomeCare AI',
   },
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+    shortcut: '/logo.svg',
+  },
   openGraph: {
     title: 'HomeCare AI 🌿',
     description: 'Natural home remedies powered by AI',
@@ -26,8 +31,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#065f46' },
-    { media: '(prefers-color-scheme: dark)', color: '#022c22' },
+    { media: '(prefers-color-scheme: light)', color: '#22c55e' },
+    { media: '(prefers-color-scheme: dark)', color: '#22c55e' },
   ],
 }
 
@@ -39,8 +44,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        {/* Logo SVG as favicon */}
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+        <link rel="alternate icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
       </head>
       <body>
         <Providers>{children}</Providers>

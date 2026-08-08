@@ -1,508 +1,483 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
-import toast, { Toaster } from 'react-hot-toast'
-import { useTheme } from 'next-themes'
-import { useAuth } from '@/lib/useAuth'
 
-const symptoms = [
-  { icon: '🤧', label: 'Cold', value: 'I have a cold and blocked nose' },
-  { icon: '😷', label: 'Cough', value: 'I have a cough' },
-  { icon: '🤒', label: 'Sore Throat', value: 'I have a sore throat' },
-  { icon: '🤕', label: 'Headache', value: 'I have a headache' },
-  { icon: '🤢', label: 'Acidity', value: 'I have acidity and indigestion' },
-  { icon: '😴', label: 'Constipation', value: 'I have constipation' },
-  { icon: '🤮', label: 'Diarrhea', value: 'I have diarrhea' },
-  { icon: '🩹', label: 'Minor Cut', value: 'I have a minor cut or scrape' },
-  { icon: '🌡️', label: 'Fever', value: 'I have a mild fever' },
-  { icon: '💤', label: 'Sleep Issues', value: 'I have trouble sleeping' },
-  { icon: '😰', label: 'Stress', value: 'I am feeling stressed' },
-  { icon: '🦷', label: 'Toothache', value: 'I have a toothache' },
-  { icon: '👁️', label: 'Eye Strain', value: 'I have eye strain' },
-  { icon: '💪', label: 'Muscle Pain', value: 'I have muscle pain' },
-  { icon: '🩸', label: 'Nose Bleed', value: 'I have a nose bleed' },
-  { icon: '🤧', label: 'Allergies', value: 'I have seasonal allergies' },
+import { useEffect, useRef, useState } from 'react'
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+
+// ============================================
+// PREMIUM HERO - HomeCare AI 2026
+// ============================================
+
+const floatingWords = [
+  'Natural Healing', 'AI Powered', 'Instant Relief',
+  'Traditional Wisdom', 'Modern Science', 'Your Wellness'
+]
+
+const stats = [
+  { number: '50+', label: 'Natural Remedies' },
+  { number: '10', label: 'Languages' },
+  { number: '100%', label: 'Free Forever' },
+  { number: '24/7', label: 'AI Available' },
 ]
 
 const features = [
-  { icon: '💬', label: 'AI Chat', href: '/chat', color: 'from-emerald-500 to-teal-500', desc: 'Talk to AI for natural remedies' },
-  { icon: '🎤', label: 'Voice Mode', href: '/voice', color: 'from-purple-500 to-pink-500', desc: 'Hands-free conversation' },
-  { icon: '📋', label: 'Assessment', href: '/questionnaire', color: 'from-indigo-500 to-purple-500', desc: 'Guided health questions' },
-  { icon: '📖', label: 'Symptom Guide', href: '/symptoms', color: 'from-teal-500 to-cyan-500', desc: 'Detailed remedies & info' },
-  { icon: '⭐', label: 'Favorites', href: '/favorites', color: 'from-yellow-500 to-orange-500', desc: 'Save helpful remedies' },
-  { icon: '📊', label: 'Wellness Tracker', href: '/tracker', color: 'from-blue-500 to-indigo-500', desc: 'Track mood, water, sleep' },
-  { icon: '⏰', label: 'Reminders', href: '/reminders', color: 'from-purple-500 to-pink-500', desc: 'Medicine & wellness alerts' },
-  { icon: '🚨', label: 'Emergency', href: '/emergency', color: 'from-red-500 to-orange-500', desc: 'Quick access to helplines' },
+  {
+    icon: '🌿',
+    title: 'Natural Remedies',
+    desc: 'Ancient wisdom meets modern AI. Get personalized herbal solutions.',
+    color: 'from-green-500/20 to-emerald-500/20',
+    border: 'border-green-500/30',
+    glow: 'shadow-green-500/20',
+  },
+  {
+    icon: '🤖',
+    title: 'AI Health Assistant',
+    desc: 'Powered by Llama 3.3. Smart, fast, accurate health guidance.',
+    color: 'from-blue-500/20 to-cyan-500/20',
+    border: 'border-blue-500/30',
+    glow: 'shadow-blue-500/20',
+  },
+  {
+    icon: '🎤',
+    title: 'Voice Mode',
+    desc: 'Hands-free healing. Just speak your symptoms naturally.',
+    color: 'from-purple-500/20 to-pink-500/20',
+    border: 'border-purple-500/30',
+    glow: 'shadow-purple-500/20',
+  },
+  {
+    icon: '🌍',
+    title: '10 Languages',
+    desc: 'Telugu, Hindi, Tamil, English and 6 more regional languages.',
+    color: 'from-orange-500/20 to-yellow-500/20',
+    border: 'border-orange-500/30',
+    glow: 'shadow-orange-500/20',
+  },
+  {
+    icon: '📊',
+    title: 'Wellness Tracker',
+    desc: 'Track mood, water, sleep and exercise. Cloud synced daily.',
+    color: 'from-teal-500/20 to-green-500/20',
+    border: 'border-teal-500/30',
+    glow: 'shadow-teal-500/20',
+  },
+  {
+    icon: '🔒',
+    title: 'Private & Secure',
+    desc: 'Your health data stays yours. Supabase RLS protection.',
+    color: 'from-red-500/20 to-pink-500/20',
+    border: 'border-red-500/30',
+    glow: 'shadow-red-500/20',
+  },
 ]
 
-const dailyTips = [
-  '💧 Drink 8 glasses of water daily',
-  '🥗 Eat colorful fruits and vegetables',
-  '😴 Get 7-8 hours of quality sleep',
-  '🚶 Walk 30 minutes every day',
-  '🧘 Practice 5 min meditation',
-  '🌞 Get 15 min of morning sunlight',
-  '🍵 Drink warm water in morning',
-  '🥦 Add greens to every meal',
-]
-
-export default function HomePage() {
-  const router = useRouter()
-  const { theme, setTheme } = useTheme()
-  const { user, signOut } = useAuth()
-  const [mounted, setMounted] = useState(false)
-  const [input, setInput] = useState('')
-  const [search, setSearch] = useState('')
-  const [tipIndex, setTipIndex] = useState(0)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const isDark = theme === 'dark'
-
-  useEffect(() => {
-    setMounted(true)
-    setTipIndex(Math.floor(Math.random() * dailyTips.length))
-  }, [])
-
-  const filteredSymptoms = symptoms.filter(s =>
-    s.label.toLowerCase().includes(search.toLowerCase())
+// ============================================
+// ANIMATED GRADIENT ORBS
+// ============================================
+function GradientOrbs() {
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Big green orb top left */}
+      <motion.div
+        className="absolute -top-40 -left-40 w-96 h-96 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)',
+        }}
+        animate={{
+          scale: [1, 1.2, 1],
+          x: [0, 30, 0],
+          y: [0, 20, 0],
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* Blue orb top right */}
+      <motion.div
+        className="absolute -top-20 -right-40 w-80 h-80 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)',
+        }}
+        animate={{
+          scale: [1.2, 1, 1.2],
+          x: [0, -20, 0],
+          y: [0, 30, 0],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* Purple orb bottom center */}
+      <motion.div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(168,85,247,0.10) 0%, transparent 70%)',
+        }}
+        animate={{
+          scale: [1, 1.3, 1],
+          y: [0, -20, 0],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* Teal orb bottom left */}
+      <motion.div
+        className="absolute bottom-20 -left-20 w-64 h-64 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%)',
+        }}
+        animate={{
+          scale: [1.1, 1, 1.1],
+          x: [0, 20, 0],
+        }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </div>
   )
+}
 
-  const handleSymptom = (value: string, label: string) => {
-    localStorage.setItem('initial_message', value)
-    toast.success(`Getting remedies for ${label}...`, { icon: '🌿' })
-    setTimeout(() => router.push('/chat'), 500)
-  }
+// ============================================
+// FLOATING WORD PILL
+// ============================================
+function FloatingPill({ word, index }: { word: string; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 + 0.5, duration: 0.5 }}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
+                 bg-white/5 border border-white/10 text-white/60 backdrop-blur-sm
+                 hover:bg-white/10 hover:text-white/90 transition-all duration-300"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+      {word}
+    </motion.div>
+  )
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim()) {
-      toast.error('Please describe your symptom!')
-      return
-    }
-    localStorage.setItem('initial_message', input)
-    toast.success('Getting remedies...', { icon: '🌿' })
-    setTimeout(() => router.push('/chat'), 500)
-  }
+// ============================================
+// STAT CARD
+// ============================================
+function StatCard({ number, label, index }: { number: string; label: string; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 + 1.2, duration: 0.5 }}
+      className="text-center"
+    >
+      <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
+        {number}
+      </div>
+      <div className="text-xs text-white/50 mt-1 font-medium">{label}</div>
+    </motion.div>
+  )
+}
 
-  const handleLogout = async () => {
-    if (confirm('Logout?')) {
-      await signOut()
-      toast.success('Logged out!', { icon: '👋' })
-    }
-  }
-
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0]
-
-  if (!mounted) return null
+// ============================================
+// FEATURE CARD (Bento Style)
+// ============================================
+function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
+  const [hovered, setHovered] = useState(false)
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${isDark
-      ? 'bg-gradient-to-br from-gray-900 via-emerald-950 to-green-950'
-      : 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100'
-    }`}>
-      <Toaster position="top-center" />
-
-      {/* Floating decorations */}
-      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-20 left-10 text-6xl opacity-10 pointer-events-none">🌿</motion.div>
-      <motion.div animate={{ y: [0, -15, 0], rotate: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, delay: 1 }} className="absolute top-40 right-16 text-5xl opacity-10 pointer-events-none">🍃</motion.div>
-      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 15, 0] }} transition={{ duration: 7, repeat: Infinity, delay: 2 }} className="absolute bottom-40 left-20 text-6xl opacity-10 pointer-events-none">🌱</motion.div>
-      <motion.div animate={{ y: [0, -15, 0], rotate: [0, -15, 0] }} transition={{ duration: 9, repeat: Infinity, delay: 0.5 }} className="absolute bottom-20 right-10 text-5xl opacity-10 pointer-events-none">🌾</motion.div>
-
-      {/* Sidebar */}
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1, duration: 0.6, ease: [0.21, 1.11, 0.81, 0.99] }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      className={`relative p-6 rounded-2xl border backdrop-blur-xl cursor-pointer
+                  bg-gradient-to-br ${feature.color} ${feature.border}
+                  shadow-xl ${hovered ? feature.glow : ''}
+                  transition-shadow duration-300`}
+    >
+      {/* Glow effect on hover */}
       <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-            />
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25 }}
-              className={`fixed top-0 left-0 h-full w-80 z-50 shadow-2xl overflow-y-auto ${isDark ? 'bg-gray-900' : 'bg-white'}`}
-            >
-              <div className={`p-6 border-b ${isDark ? 'border-emerald-900' : 'border-green-200'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-3xl">🌿</span>
-                    <span className={`text-xl font-bold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
-                      HomeCare<span className="text-emerald-500">AI</span>
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className={`p-2 rounded-lg ${isDark ? 'hover:bg-white/10 text-white' : 'hover:bg-black/5 text-gray-900'}`}
-                  >
-                    ✕
-                  </button>
-                </div>
-                {user && (
-                  <Link href="/profile" onClick={() => setSidebarOpen(false)}>
-                    <div className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-emerald-900/30 hover:bg-emerald-900/50' : 'bg-green-50 hover:bg-green-100'}`}>
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">
-                        {displayName?.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className={`font-semibold text-sm ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>{displayName}</div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-green-600'}`}>View profile</div>
-                      </div>
-                    </div>
-                  </Link>
-                )}
-              </div>
-
-              <div className="p-4">
-                <div className={`text-xs font-semibold mb-3 ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>FEATURES</div>
-                <nav className="space-y-1">
-                  {features.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-green-50 text-green-800'}`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center text-xl shadow-md`}>
-                        {item.icon}
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{item.label}</div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>{item.desc}</div>
-                      </div>
-                    </Link>
-                  ))}
-                </nav>
-
-                <div className={`text-xs font-semibold mb-3 mt-6 ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>MORE</div>
-                <nav className="space-y-1">
-                  <Link
-                    href="/settings"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-green-50 text-green-800'}`}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-500 to-slate-600 flex items-center justify-center text-xl">⚙️</div>
-                    <div className="font-medium text-sm">Settings</div>
-                  </Link>
-                  {user ? (
-                    <button
-                      onClick={() => { handleLogout(); setSidebarOpen(false); }}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-red-900/30' : 'hover:bg-red-50'}`}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-xl">🚪</div>
-                      <div className="font-medium text-sm text-red-500">Logout</div>
-                    </button>
-                  ) : (
-                    <Link
-                      href="/login"
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-green-50 text-green-800'}`}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-xl">🔐</div>
-                      <div className="font-medium text-sm">Login / Signup</div>
-                    </Link>
-                  )}
-                </nav>
-              </div>
-
-              <div className={`p-6 mt-4 border-t ${isDark ? 'border-emerald-900' : 'border-green-200'}`}>
-                <div className={`text-xs text-center ${isDark ? 'text-emerald-400/50' : 'text-green-600/50'}`}>
-                  🌿 Natural remedies powered by AI
-                </div>
-                <div className={`text-xs text-center mt-1 ${isDark ? 'text-emerald-400/40' : 'text-green-600/40'}`}>
-                  Not medical advice
-                </div>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Top Navigation */}
-      <nav className={`sticky top-0 z-30 backdrop-blur-xl border-b ${isDark ? 'bg-gray-900/70 border-emerald-900' : 'bg-white/70 border-green-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-green-100 text-green-800'}`}
-              aria-label="Menu"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <Link href="/" className="flex items-center gap-2">
-              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 3, repeat: Infinity }} className="text-2xl">🌿</motion.div>
-              <span className={`text-lg sm:text-xl font-bold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
-                HomeCare<span className="text-emerald-500">AI</span>
-              </span>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className={`p-2 rounded-lg transition-all ${isDark ? 'bg-emerald-900/30 text-yellow-300 hover:bg-emerald-900/50' : 'bg-green-100 text-gray-700 hover:bg-green-200'}`}
-              aria-label="Toggle theme"
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
-            {user ? (
-              <Link
-                href="/profile"
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-emerald-900/30 text-emerald-200 hover:bg-emerald-900/50' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
-              >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
-                  {displayName?.charAt(0).toUpperCase()}
-                </div>
-                <span className="hidden sm:inline">{displayName}</span>
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 sm:px-5 py-2 rounded-lg text-sm font-medium shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/50 transition-all"
-              >
-                🔐 Login
-              </Link>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 sm:py-12">
-
-        {/* Daily Tip */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center mb-8"
-        >
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-sm border shadow-md ${isDark ? 'bg-emerald-900/40 border-emerald-800 text-emerald-200' : 'bg-white/70 border-green-200 text-green-800'}`}>
-            <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>✨</motion.span>
-            {dailyTips[tipIndex]}
-          </div>
-        </motion.div>
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8"
-        >
-          <motion.div
-            animate={{ rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className={`inline-block p-4 backdrop-blur-sm rounded-full shadow-lg mb-4 border ${isDark ? 'bg-emerald-900/50 border-emerald-800' : 'bg-white/60 border-green-200'}`}
-          >
-            <span className="text-5xl">🌿</span>
-          </motion.div>
-          <h1 className={`text-4xl md:text-5xl font-bold mb-3 ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
-            HomeCare AI
-          </h1>
-          <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-emerald-200/80' : 'text-green-800/70'}`}>
-            Natural home remedies • Ancient wisdom • Modern care
-          </p>
-          <p className={`text-sm mt-2 italic ${isDark ? 'text-emerald-300/60' : 'text-green-700/60'}`}>
-            &ldquo;Nature heals what medicine cannot&rdquo;
-          </p>
-          {user && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className={`mt-3 text-sm font-semibold ${isDark ? 'text-emerald-300' : 'text-green-700'}`}
-            >
-              Welcome back, {displayName}! 💚
-            </motion.p>
-          )}
-        </motion.div>
-
-        {/* Quick Features Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-8 max-w-3xl mx-auto"
-        >
-          {features.map((item, i) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + i * 0.05 }}
-            >
-              <Link href={item.href}>
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`bg-gradient-to-br ${item.color} p-2 sm:p-3 rounded-2xl text-white text-center shadow-md hover:shadow-lg transition-all`}
-                >
-                  <div className="text-xl sm:text-2xl">{item.icon}</div>
-                  <div className="text-xs font-semibold mt-1">{item.label}</div>
-                </motion.div>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Search */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="w-full max-w-md mx-auto mb-6"
-        >
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍 Search symptoms..."
-            className={`w-full px-4 py-3 rounded-full text-sm outline-none backdrop-blur-sm border ${isDark ? 'bg-emerald-900/30 text-emerald-100 placeholder:text-emerald-300/50 border-emerald-800' : 'bg-white/70 text-green-900 placeholder:text-green-600/60 border-green-200'}`}
-          />
-        </motion.div>
-
-        {/* Symptoms Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 max-w-4xl mx-auto"
-        >
-          {filteredSymptoms.map((s, index) => (
-            <motion.button
-              key={s.label}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.03 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleSymptom(s.value, s.label)}
-              className={`group p-5 rounded-2xl backdrop-blur-sm border transition-all shadow-md hover:shadow-xl ${isDark ? 'bg-emerald-900/30 border-emerald-800 hover:bg-emerald-900/50 hover:border-emerald-500/50' : 'bg-white/70 border-green-200 hover:bg-white hover:border-green-400'}`}
-            >
-              <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">{s.icon}</div>
-              <div className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>{s.label}</div>
-            </motion.button>
-          ))}
-        </motion.div>
-
-        {filteredSymptoms.length === 0 && (
-          <div className={`text-center py-8 ${isDark ? 'text-emerald-300' : 'text-green-700'}`}>
-            No symptoms match. Try the input below! 👇
-          </div>
-        )}
-
-        {/* Custom Input */}
-        <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          onSubmit={handleSubmit}
-          className={`max-w-2xl mx-auto flex gap-2 p-2 rounded-full shadow-lg backdrop-blur-sm border ${isDark ? 'bg-emerald-900/30 border-emerald-800' : 'bg-white/70 border-green-200'}`}
-        >
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Or describe how you're feeling..."
-            className={`flex-1 bg-transparent px-5 py-3 text-sm outline-none ${isDark ? 'text-emerald-100 placeholder:text-emerald-300/50' : 'text-green-900 placeholder:text-green-600/60'}`}
-          />
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            type="submit"
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-full text-sm font-semibold shadow-md hover:shadow-lg transition-all"
-          >
-            Get Help 🌿
-          </motion.button>
-        </motion.form>
-
-        {/* Info Cards - Real values, not fake stats */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.9 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 max-w-3xl mx-auto"
-        >
-          <div className={`backdrop-blur-sm border rounded-2xl p-5 text-center ${isDark ? 'bg-emerald-900/30 border-emerald-800' : 'bg-white/60 border-green-200'}`}>
-            <div className="text-4xl mb-2">🌿</div>
-            <h3 className={`font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>Natural Remedies</h3>
-            <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>Traditional wisdom for common health issues</p>
-          </div>
-          <div className={`backdrop-blur-sm border rounded-2xl p-5 text-center ${isDark ? 'bg-emerald-900/30 border-emerald-800' : 'bg-white/60 border-green-200'}`}>
-            <div className="text-4xl mb-2">🌍</div>
-            <h3 className={`font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>10 Languages</h3>
-            <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>English, Telugu, Hindi, Tamil, and more</p>
-          </div>
-          <div className={`backdrop-blur-sm border rounded-2xl p-5 text-center ${isDark ? 'bg-emerald-900/30 border-emerald-800' : 'bg-white/60 border-green-200'}`}>
-            <div className="text-4xl mb-2">💚</div>
-            <h3 className={`font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>Safe Guidance</h3>
-            <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>Clear warnings for when to see a doctor</p>
-          </div>
-        </motion.div>
-
-        {/* Login prompt for guests - honest */}
-        {!user && (
+        {hovered && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className={`mt-8 p-4 rounded-2xl max-w-2xl mx-auto text-center backdrop-blur-sm border ${isDark ? 'bg-emerald-900/30 border-emerald-800' : 'bg-white/60 border-green-200'}`}
-          >
-            <div className="text-2xl mb-2">☁️</div>
-            <p className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
-              Sign up to save your data across devices
-            </p>
-            <p className={`text-xs mt-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
-              Access chat history, favorites, and wellness tracking from anywhere
-            </p>
-            <Link
-              href="/login"
-              className="inline-block mt-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-md hover:shadow-lg transition-all"
-            >
-              Get Started - Free
-            </Link>
-          </motion.div>
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 rounded-2xl"
+            style={{
+              background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 70%)',
+            }}
+          />
         )}
+      </AnimatePresence>
 
-        {/* Disclaimer */}
+      <div className="relative z-10">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className={`mt-8 p-4 rounded-2xl max-w-2xl mx-auto text-center backdrop-blur-sm border ${isDark ? 'bg-yellow-900/20 border-yellow-800/50 text-yellow-200' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`}
+          animate={hovered ? { scale: 1.2, rotate: [0, -10, 10, 0] } : { scale: 1, rotate: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-4xl mb-4"
         >
-          <p className="text-xs">
-            ⚠️ <strong>Important:</strong> For minor symptoms only. Not a substitute for professional medical advice. Consult a healthcare provider for serious or persistent symptoms.
-          </p>
+          {feature.icon}
         </motion.div>
-
+        <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
+        <p className="text-sm text-white/60 leading-relaxed">{feature.desc}</p>
       </div>
 
-      {/* Footer */}
-      <footer className={`relative z-10 py-8 px-4 mt-12 border-t ${isDark ? 'border-emerald-900' : 'border-green-200'}`}>
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="text-2xl">🌿</span>
-            <span className={`font-bold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
-              HomeCare<span className="text-emerald-500">AI</span>
-            </span>
-          </div>
-          <p className={`text-xs mb-2 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
-            Natural remedies powered by AI
-          </p>
-          <p className={`text-xs ${isDark ? 'text-emerald-400/50' : 'text-green-600/50'}`}>
-            Made with 💚 for natural wellness • Not medical advice
-          </p>
-        </div>
-      </footer>
+      {/* Corner accent */}
+      <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-white/20" />
+    </motion.div>
+  )
+}
 
-    </div>
+// ============================================
+// MAIN HERO COMPONENT
+// ============================================
+function HeroSection() {
+  const [wordIndex, setWordIndex] = useState(0)
+  const words = ['Headache', 'Cold', 'Cough', 'Fever', 'Stress', 'Fatigue']
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex(prev => (prev + 1) % words.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-10">
+
+      {/* Top badge */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full
+                   bg-green-500/10 border border-green-500/20 backdrop-blur-sm"
+      >
+        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+        <span className="text-sm text-green-400 font-semibold">AI-Powered Natural Wellness</span>
+        <span className="text-xs text-white/40 bg-white/10 px-2 py-0.5 rounded-full">FREE</span>
+      </motion.div>
+
+      {/* Main headline */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        className="text-center max-w-4xl mx-auto mb-6"
+      >
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] tracking-tight mb-4">
+          Natural Fix for
+          <br />
+          <span className="relative inline-block">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={wordIndex}
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -40, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.21, 1.11, 0.81, 0.99] }}
+                className="inline-block bg-gradient-to-r from-green-400 via-emerald-300 to-teal-400 bg-clip-text text-transparent"
+              >
+                {words[wordIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+        </h1>
+        <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed font-light mt-6">
+          Your AI health companion. Get instant natural remedies, 
+          personalized wellness advice and traditional healing wisdom — 
+          completely free, forever.
+        </p>
+      </motion.div>
+
+      {/* CTA Buttons */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        className="flex flex-col sm:flex-row gap-4 mb-12"
+      >
+        <Link href="/chat">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="group relative px-8 py-4 rounded-2xl font-bold text-lg overflow-hidden
+                       bg-gradient-to-r from-green-500 to-emerald-500 text-white
+                       shadow-lg shadow-green-500/30 hover:shadow-green-500/50
+                       transition-shadow duration-300"
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              Start Healing Free
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                →
+              </motion.span>
+            </span>
+            {/* Shine effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            />
+          </motion.button>
+        </Link>
+
+        <Link href="/symptoms">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-8 py-4 rounded-2xl font-bold text-lg
+                       bg-white/5 border border-white/10 text-white/80
+                       hover:bg-white/10 hover:border-white/20
+                       backdrop-blur-sm transition-all duration-300"
+          >
+            Browse Remedies
+          </motion.button>
+        </Link>
+      </motion.div>
+
+      {/* Stats Row */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="flex items-center gap-8 mb-12 flex-wrap justify-center"
+      >
+        {stats.map((stat, i) => (
+          <StatCard key={i} {...stat} index={i} />
+        ))}
+      </motion.div>
+
+      {/* Floating word pills */}
+      <div className="flex flex-wrap gap-2 justify-center max-w-lg mb-16">
+        {floatingWords.map((word, i) => (
+          <FloatingPill key={i} word={word} index={i} />
+        ))}
+      </div>
+
+      {/* Scroll indicator */}
+      <motion.div
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+      >
+        <span className="text-xs text-white/30 font-medium tracking-widest uppercase">Scroll</span>
+        <div className="w-px h-8 bg-gradient-to-b from-white/30 to-transparent" />
+      </motion.div>
+    </section>
+  )
+}
+
+// ============================================
+// FEATURES SECTION
+// ============================================
+function FeaturesSection() {
+  return (
+    <section className="relative px-4 py-20 max-w-6xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="text-center mb-16"
+      >
+        <span className="text-xs font-bold tracking-widest text-green-400 uppercase mb-4 block">
+          Everything You Need
+        </span>
+        <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+          Premium Wellness,
+          <br />
+          <span className="bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">
+            Zero Cost
+          </span>
+        </h2>
+        <p className="text-white/50 max-w-xl mx-auto">
+          Built with modern AI and traditional wisdom. No subscriptions, no limits, no catches.
+        </p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {features.map((feature, i) => (
+          <FeatureCard key={i} feature={feature} index={i} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ============================================
+// FINAL CTA SECTION
+// ============================================
+function CTASection() {
+  return (
+    <section className="relative px-4 py-20">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="max-w-3xl mx-auto text-center"
+      >
+        {/* Glowing card */}
+        <div className="relative p-12 rounded-3xl border border-green-500/20
+                        bg-gradient-to-br from-green-500/10 to-emerald-500/5
+                        backdrop-blur-xl overflow-hidden">
+
+          {/* Background glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent" />
+
+          <div className="relative z-10">
+            <div className="text-5xl mb-6">🌿</div>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+              Start Healing
+              <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
+                {' '}Today
+              </span>
+            </h2>
+            <p className="text-white/50 mb-8 text-lg">
+              Join thousands using AI-powered natural remedies. Free forever.
+            </p>
+
+            <Link href="/chat">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-10 py-5 rounded-2xl font-bold text-xl
+                           bg-gradient-to-r from-green-500 to-emerald-500 text-white
+                           shadow-xl shadow-green-500/30 hover:shadow-green-500/50
+                           transition-shadow duration-300"
+              >
+                Chat with AI Now — It&apos;s Free 🌿
+              </motion.button>
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  )
+}
+
+// ============================================
+// MAIN PAGE
+// ============================================
+export default function HomePage() {
+  return (
+    <main className="relative min-h-screen bg-[#080808] overflow-x-hidden">
+      {/* Animated gradient background */}
+      <GradientOrbs />
+
+      {/* Grid overlay for depth */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+        }}
+      />
+
+      {/* Sections */}
+      <div className="relative z-10">
+        <HeroSection />
+        <FeaturesSection />
+        <CTASection />
+      </div>
+    </main>
   )
 }
