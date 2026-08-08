@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 
 // ============================================
@@ -77,7 +77,6 @@ const features = [
 function GradientOrbs() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Big green orb top left */}
       <motion.div
         className="absolute -top-40 -left-40 w-96 h-96 rounded-full"
         style={{
@@ -90,7 +89,6 @@ function GradientOrbs() {
         }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
-      {/* Blue orb top right */}
       <motion.div
         className="absolute -top-20 -right-40 w-80 h-80 rounded-full"
         style={{
@@ -103,7 +101,6 @@ function GradientOrbs() {
         }}
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
-      {/* Purple orb bottom center */}
       <motion.div
         className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full"
         style={{
@@ -115,7 +112,6 @@ function GradientOrbs() {
         }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
       />
-      {/* Teal orb bottom left */}
       <motion.div
         className="absolute bottom-20 -left-20 w-64 h-64 rounded-full"
         style={{
@@ -131,9 +127,6 @@ function GradientOrbs() {
   )
 }
 
-// ============================================
-// FLOATING WORD PILL
-// ============================================
 function FloatingPill({ word, index }: { word: string; index: number }) {
   return (
     <motion.div
@@ -150,9 +143,6 @@ function FloatingPill({ word, index }: { word: string; index: number }) {
   )
 }
 
-// ============================================
-// STAT CARD
-// ============================================
 function StatCard({ number, label, index }: { number: string; label: string; index: number }) {
   return (
     <motion.div
@@ -169,9 +159,6 @@ function StatCard({ number, label, index }: { number: string; label: string; ind
   )
 }
 
-// ============================================
-// FEATURE CARD (Bento Style)
-// ============================================
 function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
   const [hovered, setHovered] = useState(false)
 
@@ -189,7 +176,6 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
                   shadow-xl ${hovered ? feature.glow : ''}
                   transition-shadow duration-300`}
     >
-      {/* Glow effect on hover */}
       <AnimatePresence>
         {hovered && (
           <motion.div
@@ -216,15 +202,11 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
         <p className="text-sm text-white/60 leading-relaxed">{feature.desc}</p>
       </div>
 
-      {/* Corner accent */}
       <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-white/20" />
     </motion.div>
   )
 }
 
-// ============================================
-// MAIN HERO COMPONENT
-// ============================================
 function HeroSection() {
   const [wordIndex, setWordIndex] = useState(0)
   const words = ['Headache', 'Cold', 'Cough', 'Fever', 'Stress', 'Fatigue']
@@ -238,8 +220,6 @@ function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-10">
-
-      {/* Top badge */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -252,7 +232,6 @@ function HeroSection() {
         <span className="text-xs text-white/40 bg-white/10 px-2 py-0.5 rounded-full">FREE</span>
       </motion.div>
 
-      {/* Main headline */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -278,20 +257,20 @@ function HeroSection() {
           </span>
         </h1>
         <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed font-light mt-6">
-          Your AI health companion. Get instant natural remedies, 
-          personalized wellness advice and traditional healing wisdom — 
+          Your AI health companion. Get instant natural remedies,
+          personalized wellness advice and traditional healing wisdom —
           completely free, forever.
         </p>
       </motion.div>
 
-      {/* CTA Buttons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
         className="flex flex-col sm:flex-row gap-4 mb-12"
       >
-        <Link href="/chat">
+        {/* CHANGED: Now goes to /home instead of /chat */}
+        <Link href="/home">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -309,7 +288,6 @@ function HeroSection() {
                 →
               </motion.span>
             </span>
-            {/* Shine effect */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
               animate={{ x: ['-100%', '200%'] }}
@@ -332,7 +310,6 @@ function HeroSection() {
         </Link>
       </motion.div>
 
-      {/* Stats Row */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -344,14 +321,12 @@ function HeroSection() {
         ))}
       </motion.div>
 
-      {/* Floating word pills */}
       <div className="flex flex-wrap gap-2 justify-center max-w-lg mb-16">
         {floatingWords.map((word, i) => (
           <FloatingPill key={i} word={word} index={i} />
         ))}
       </div>
 
-      {/* Scroll indicator */}
       <motion.div
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
@@ -364,9 +339,6 @@ function HeroSection() {
   )
 }
 
-// ============================================
-// FEATURES SECTION
-// ============================================
 function FeaturesSection() {
   return (
     <section className="relative px-4 py-20 max-w-6xl mx-auto">
@@ -400,9 +372,6 @@ function FeaturesSection() {
   )
 }
 
-// ============================================
-// FINAL CTA SECTION
-// ============================================
 function CTASection() {
   return (
     <section className="relative px-4 py-20">
@@ -412,12 +381,9 @@ function CTASection() {
         viewport={{ once: true }}
         className="max-w-3xl mx-auto text-center"
       >
-        {/* Glowing card */}
         <div className="relative p-12 rounded-3xl border border-green-500/20
                         bg-gradient-to-br from-green-500/10 to-emerald-500/5
                         backdrop-blur-xl overflow-hidden">
-
-          {/* Background glow */}
           <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent" />
 
           <div className="relative z-10">
@@ -432,7 +398,8 @@ function CTASection() {
               Join thousands using AI-powered natural remedies. Free forever.
             </p>
 
-            <Link href="/chat">
+            {/* CHANGED: Goes to /home */}
+            <Link href="/home">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -441,7 +408,7 @@ function CTASection() {
                            shadow-xl shadow-green-500/30 hover:shadow-green-500/50
                            transition-shadow duration-300"
               >
-                Chat with AI Now — It&apos;s Free 🌿
+                Get Started Now — Free 🌿
               </motion.button>
             </Link>
           </div>
@@ -451,16 +418,11 @@ function CTASection() {
   )
 }
 
-// ============================================
-// MAIN PAGE
-// ============================================
-export default function HomePage() {
+export default function LandingPage() {
   return (
     <main className="relative min-h-screen bg-[#080808] overflow-x-hidden">
-      {/* Animated gradient background */}
       <GradientOrbs />
 
-      {/* Grid overlay for depth */}
       <div
         className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
         style={{
@@ -472,7 +434,6 @@ export default function HomePage() {
         }}
       />
 
-      {/* Sections */}
       <div className="relative z-10">
         <HeroSection />
         <FeaturesSection />
