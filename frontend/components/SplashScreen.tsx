@@ -2,37 +2,48 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 
+type Particle = {
+  id: number
+  x: number
+  y: number
+  duration: number
+  delay: number
+}
+
 export default function SplashScreen() {
   const [show, setShow] = useState(true)
   const [phase, setPhase] = useState(0)
+  const [particles, setParticles] = useState<Particle[]>([])
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Show every time for max impact! (comment out to show only once)
-    // const hasSeenSplash = sessionStorage.getItem('homecare_splash_seen')
-    // if (hasSeenSplash) {
-    //   setShow(false)
-    //   return
-    // }
+    setMounted(true)
 
-    // Phase transitions
+    // Generate particles ONLY on client after mount
+    const width = window.innerWidth
+    const height = window.innerHeight
+    const newParticles: Particle[] = Array.from({ length: 60 }, (_, i) => ({
+      id: i,
+      x: Math.random() * width,
+      y: height + 20,
+      duration: 3 + Math.random() * 2,
+      delay: Math.random() * 3,
+    }))
+    setParticles(newParticles)
+
     const timers = [
-      setTimeout(() => setPhase(1), 800),   // Logo appears
-      setTimeout(() => setPhase(2), 1600),  // Title reveals
-      setTimeout(() => setPhase(3), 2400),  // Features appear
-      setTimeout(() => setPhase(4), 3600),  // Final flash
+      setTimeout(() => setPhase(1), 800),
+      setTimeout(() => setPhase(2), 1600),
+      setTimeout(() => setPhase(3), 2400),
+      setTimeout(() => setPhase(4), 3600),
       setTimeout(() => {
         setShow(false)
-        sessionStorage.setItem('homecare_splash_seen', 'true')
       }, 4200),
     ]
-
     return () => timers.forEach(clearTimeout)
   }, [])
 
-  const skip = () => {
-    setShow(false)
-    sessionStorage.setItem('homecare_splash_seen', 'true')
-  }
+  const skip = () => setShow(false)
 
   return (
     <AnimatePresence>
@@ -42,7 +53,7 @@ export default function SplashScreen() {
           exit={{ opacity: 0, scale: 1.1, transition: { duration: 0.6 } }}
           className="fixed inset-0 z-[100] overflow-hidden bg-black"
         >
-          {/* Animated Aurora Background */}
+          {/* Aurora background */}
           <div className="absolute inset-0">
             <motion.div
               animate={{
@@ -69,14 +80,14 @@ export default function SplashScreen() {
             }}
           />
 
-          {/* Floating particles */}
-          {[...Array(60)].map((_, i) => (
+          {/* Particles - only render after client mount */}
+          {mounted && particles.map((particle) => (
             <motion.div
-              key={i}
+              key={`particle-${particle.id}`}
               className="absolute w-1 h-1 rounded-full bg-emerald-400"
               initial={{
-                x: typeof window !== 'undefined' ? Math.random() * window.innerWidth : 500,
-                y: typeof window !== 'undefined' ? window.innerHeight + 20 : 800,
+                x: particle.x,
+                y: particle.y,
                 opacity: 0,
               }}
               animate={{
@@ -84,9 +95,9 @@ export default function SplashScreen() {
                 opacity: [0, 1, 1, 0],
               }}
               transition={{
-                duration: 3 + Math.random() * 2,
+                duration: particle.duration,
                 repeat: Infinity,
-                delay: Math.random() * 3,
+                delay: particle.delay,
               }}
               style={{
                 boxShadow: '0 0 10px rgba(16, 185, 129, 0.8)',
@@ -119,7 +130,7 @@ export default function SplashScreen() {
             />
           ))}
 
-          {/* Ripple rings from center */}
+          {/* Ripple rings */}
           {[0, 1, 2, 3, 4].map((i) => (
             <motion.div
               key={`ripple-${i}`}
@@ -149,10 +160,9 @@ export default function SplashScreen() {
             Skip →
           </button>
 
-          {/* Main Content */}
           <div className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center px-6">
 
-            {/* PHASE 0-1: Logo materializes */}
+            {/* Logo */}
             <motion.div
               initial={{ scale: 0, rotate: -360, opacity: 0 }}
               animate={{
@@ -167,7 +177,6 @@ export default function SplashScreen() {
               }}
               className="relative mb-8"
             >
-              {/* Glow behind logo */}
               <motion.div
                 animate={{
                   scale: [1, 1.3, 1],
@@ -180,7 +189,6 @@ export default function SplashScreen() {
                 className="absolute inset-0 blur-3xl bg-emerald-500 rounded-full"
               />
 
-              {/* Logo container */}
               <motion.div
                 animate={{
                   rotate: [0, 5, -5, 0],
@@ -197,7 +205,6 @@ export default function SplashScreen() {
                 </div>
               </motion.div>
 
-              {/* Orbital rings around logo */}
               {phase >= 1 && (
                 <>
                   <motion.div
@@ -214,7 +221,7 @@ export default function SplashScreen() {
               )}
             </motion.div>
 
-            {/* PHASE 2: Title reveals */}
+            {/* Title */}
             <AnimatePresence>
               {phase >= 2 && (
                 <motion.div
@@ -222,7 +229,6 @@ export default function SplashScreen() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8 }}
                 >
-                  {/* Main title */}
                   <div className="mb-4 overflow-hidden">
                     <motion.h1
                       initial={{ y: 100 }}
@@ -249,7 +255,6 @@ export default function SplashScreen() {
                     </motion.h1>
                   </div>
 
-                  {/* Tagline with typing effect */}
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -262,7 +267,7 @@ export default function SplashScreen() {
               )}
             </AnimatePresence>
 
-            {/* PHASE 3: Feature badges */}
+            {/* Feature badges */}
             <AnimatePresence>
               {phase >= 3 && (
                 <motion.div
@@ -278,7 +283,7 @@ export default function SplashScreen() {
                     { icon: '💚', label: 'Free Forever' },
                   ].map((badge, i) => (
                     <motion.div
-                      key={i}
+                      key={`badge-${i}`}
                       initial={{ opacity: 0, scale: 0, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       transition={{ delay: i * 0.1, type: 'spring', bounce: 0.5 }}
@@ -295,7 +300,7 @@ export default function SplashScreen() {
               )}
             </AnimatePresence>
 
-            {/* PHASE 3: Loading progress */}
+            {/* Loading bar */}
             <AnimatePresence>
               {phase >= 3 && (
                 <motion.div
@@ -321,7 +326,7 @@ export default function SplashScreen() {
               )}
             </AnimatePresence>
 
-            {/* PHASE 4: Final flash */}
+            {/* Final flash */}
             <AnimatePresence>
               {phase >= 4 && (
                 <motion.div
@@ -334,7 +339,6 @@ export default function SplashScreen() {
             </AnimatePresence>
           </div>
 
-          {/* Bottom info */}
           <div className="absolute bottom-6 left-0 right-0 text-center text-emerald-400/40 text-xs tracking-wider">
             Made with 💚 for natural wellness
           </div>

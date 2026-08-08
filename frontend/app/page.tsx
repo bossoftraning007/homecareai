@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-
-// ============================================
-// PREMIUM HERO - HomeCare AI 2026
-// ============================================
+import SplashScreen from '@/components/SplashScreen'
 
 const floatingWords = [
   'Natural Healing', 'AI Powered', 'Instant Relief',
@@ -71,9 +68,6 @@ const features = [
   },
 ]
 
-// ============================================
-// ANIMATED GRADIENT ORBS
-// ============================================
 function GradientOrbs() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -269,7 +263,6 @@ function HeroSection() {
         transition={{ duration: 0.6, delay: 0.5 }}
         className="flex flex-col sm:flex-row gap-4 mb-12"
       >
-        {/* CHANGED: Now goes to /home instead of /chat */}
         <Link href="/home">
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -398,7 +391,6 @@ function CTASection() {
               Join thousands using AI-powered natural remedies. Free forever.
             </p>
 
-            {/* CHANGED: Goes to /home */}
             <Link href="/home">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -420,25 +412,28 @@ function CTASection() {
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen bg-[#080808] overflow-x-hidden">
-      <GradientOrbs />
+    <>
+      <SplashScreen />
+      <main className="relative min-h-screen bg-[#080808] overflow-x-hidden">
+        <GradientOrbs />
 
-      <div
-        className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px',
-        }}
-      />
+        <div
+          className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
+          }}
+        />
 
-      <div className="relative z-10">
-        <HeroSection />
-        <FeaturesSection />
-        <CTASection />
-      </div>
-    </main>
+        <div className="relative z-10">
+          <HeroSection />
+          <FeaturesSection />
+          <CTASection />
+        </div>
+      </main>
+    </>
   )
 }
