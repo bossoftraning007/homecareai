@@ -67,20 +67,33 @@ export default function LoginPage() {
   if (!mounted) return null
 
   return (
-    <div className={`min-h-screen relative overflow-hidden flex items-center justify-center p-4 ${isDark
-      ? 'bg-gradient-to-br from-gray-900 via-emerald-950 to-green-950'
-      : 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100'
-    }`}>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
       <Toaster position="top-center" />
 
-      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }} transition={{ duration: 5, repeat: Infinity }} className="absolute top-10 left-10 text-6xl opacity-20">🌿</motion.div>
-      <motion.div animate={{ y: [0, -15, 0], rotate: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 1 }} className="absolute top-20 right-16 text-5xl opacity-20">🍃</motion.div>
-      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 15, 0] }} transition={{ duration: 6, repeat: Infinity, delay: 2 }} className="absolute bottom-20 left-20 text-6xl opacity-20">🌱</motion.div>
+      <video
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+      >
+        <source
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4"
+          type="video/mp4"
+        />
+      </video>
+
+      <div className="absolute inset-0 bg-black/40 z-10"></div>
+
+      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }} transition={{ duration: 5, repeat: Infinity }} className="absolute top-10 left-10 text-6xl opacity-20 z-10">🌿</motion.div>
+      <motion.div animate={{ y: [0, -15, 0], rotate: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 1 }} className="absolute top-20 right-16 text-5xl opacity-20 z-10">🍃</motion.div>
+      <motion.div animate={{ y: [0, -20, 0], rotate: [0, 15, 0] }} transition={{ duration: 6, repeat: Infinity, delay: 2 }} className="absolute bottom-20 left-20 text-6xl opacity-20 z-10">🌱</motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`w-full max-w-md p-8 rounded-3xl shadow-2xl backdrop-blur-md border relative z-10 ${isDark ? 'bg-gray-800/80 border-emerald-800' : 'bg-white/80 border-green-200'}`}
+        className={`w-full max-w-md p-8 rounded-3xl shadow-2xl backdrop-blur-md border relative z-20 ${isDark ? 'bg-gray-800/80 border-emerald-800' : 'bg-white/80 border-green-200'}`}
       >
 
         <div className="text-center mb-6">
