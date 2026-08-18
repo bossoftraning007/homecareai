@@ -15,15 +15,235 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dark body { color: #d1fae5; }
+/* Theme variables - base (Forest) */
+:root {
+  --theme-bg: #059669;
+  --theme-bg-2: #10b981;
+  --theme-accent: #10b981;
+  --theme-accent-hover: #34d399;
+  --theme-border: rgba(16, 185, 129, 0.2);
+  --theme-text-accent: #065f46;
+  --theme-text-accent-dark: #6ee7b7;
+  --theme-shadow: rgba(16, 185, 129, 0.3);
+}
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(6, 95, 70, 0.2);
+/* Forest (default) */
+.theme-forest {
+  --theme-bg: #059669;
+  --theme-bg-2: #10b981;
+  --theme-accent: #10b981;
+  --theme-accent-hover: #34d399;
+  --theme-border: rgba(16, 185, 129, 0.2);
+  --theme-text-accent: #065f46;
+  --theme-text-accent-dark: #6ee7b7;
+  --theme-shadow: rgba(16, 185, 129, 0.3);
+}
+
+/* Ocean */
+.theme-ocean {
+  --theme-bg: #083344;
+  --theme-bg-2: #06b6d4;
+  --theme-accent: #06b6d4;
+  --theme-accent-hover: #22d3ee;
+  --theme-border: rgba(6, 182, 212, 0.2);
+  --theme-text-accent: #083344;
+  --theme-text-accent-dark: #67e8f0;
+  --theme-shadow: rgba(6, 185, 212, 0.3);
+}
+
+/* Sunset */
+.theme-sunset {
+  --theme-bg: #7c2d12;
+  --theme-bg-2: #ef4444;
+  --theme-accent: #ef4444;
+  --theme-accent-hover: #f87171;
+  --theme-border: rgba(239, 68, 68, 0.2);
+  --theme-text-accent: #991f1f;
+  --theme-text-accent-dark: #fca5a5;
+  --theme-shadow: rgba(239, 68, 68, 0.3);
+}
+
+/* Lavender */
+.theme-lavender {
+  --theme-bg: #4c1d93;
+  --theme-bg-2: #a855f7;
+  --theme-accent: #a855f7;
+  --theme-accent-hover: #c084fc;
+  --theme-border: rgba(168, 85, 247, 0.2);
+  --theme-text-accent: #5827a8;
+  --theme-text-accent-dark: #d8b4fe;
+  --theme-shadow: rgba(168, 85, 247, 0.3);
+}
+
+/* Rose */
+.theme-rose {
+  --theme-bg: #9a2234;
+  --theme-bg-2: #f43f73;
+  --theme-accent: #f43f73;
+  --theme-accent-hover: #fb7185;
+  --theme-border: rgba(244, 63, 115, 0.2);
+  --theme-text-accent: #9d181b;
+  --theme-text-accent-dark: #fca5a5;
+  --theme-shadow: rgba(244, 63, 115, 0.3);
+}
+
+/* Midnight */
+.theme-midnight {
+  --theme-bg: #1e3a8a;
+  --theme-bg-2: #312e81;
+  --theme-accent: #6366f1;
+  --theme-accent-hover: #818cf8;
+  --theme-border: rgba(99, 102, 245, 0.2);
+  --theme-text-accent: #1e3a8a;
+  --theme-text-accent-dark: #a5b4fc;
+  --theme-shadow: rgba(99, 102, 245, 0.3);
+}
+
+/* Sunnyside */
+.theme-sunnyside {
+  --theme-bg: #78350f;
+  --theme-bg-2: #f59e0b;
+  --theme-accent: #f59e0b;
+  --theme-accent-hover: #fbbf24;
+  --theme-border: rgba(245, 158, 11, 0.2);
+  --theme-text-accent: #78350f;
+  --theme-text-accent-dark: #fcd34d;
+  --theme-shadow: rgba(245, 158, 11, 0.3);
+}
+
+/* Ember */
+.theme-ember {
+  --theme-bg: #7f1d1d;
+  --theme-bg-2: #dc2626;
+  --theme-accent: #dc2626;
+  --theme-accent-hover: #f87171;
+  --theme-border: rgba(220, 38, 38, 0.2);
+  --theme-text-accent: #7f1d1d;
+  --theme-text-accent-dark: #fca5a5;
+  --theme-shadow: rgba(220, 38, 38, 0.3);
+}
+
+/* Cosmic */
+.theme-cosmic {
+  --theme-bg: #312e81;
+  --theme-bg-2: #7c3aed;
+  --theme-accent: #7c3aed;
+  --theme-accent-hover: #a78bfa;
+  --theme-border: rgba(124, 54, 237, 0.2);
+  --theme-text-accent: #312e81;
+  --theme-text-accent-dark: #c4b5fd;
+  --theme-shadow: rgba(124, 54, 237, 0.3);
+}
+
+/* Mint */
+.theme-mint {
+  --theme-bg: #0d9488;
+  --theme-bg-2: #10b981;
+  --theme-accent: #10b981;
+  --theme-accent-hover: #34d399;
+  --theme-border: rgba(16, 185, 129, 0.2);
+  --theme-text-accent: #0d9488;
+  --theme-text-accent-dark: #6ee7b7;
+  --theme-shadow: rgba(16, 185, 129, 0.3);
+}
+
+/* Desert */
+.theme-desert {
+  --theme-bg: #78350f;
+  --theme-bg-2: #ea580c;
+  --theme-accent: #ea580c;
+  --theme-accent-hover: #fb923c;
+  --theme-border: rgba(234, 88, 12, 0.2);
+  --theme-text-accent: #78350f;
+  --theme-text-accent-dark: #fcd3b0;
+  --theme-shadow: rgba(234, 88, 12, 0.3);
+}
+
+/* Graphite */
+.theme-graphite {
+  --theme-bg: #374151;
+  --theme-bg-2: #6b7280;
+  --theme-accent: #6b7280;
+  --theme-accent-hover: #9ca3af;
+  --theme-border: rgba(107, 114, 128, 0.2);
+  --theme-text-accent: #374151;
+  --theme-text-accent-dark: #d1d5db;
+  --theme-shadow: rgba(107, 114, 128, 0.3);
+}
+
+/* ===== Theme Overrides ===== */
+/* Apply theme accent colors to green/emerald elements */
+
+/* Page backgrounds - dark mode */
+html[class*="theme-"] .bg-gradient-to-br.from-gray-900.via-emerald-950.to-green-950 {
+  background-image: linear-gradient(135deg, var(--theme-bg) 0%, var(--theme-bg-2) 100%) !important;
+}
+
+/* Page backgrounds - light mode */
+html[class*="theme-"] .bg-gradient-to-br.from-green-50.via-emerald-50.to-teal-100 {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--theme-accent) 6%, #fff 94%) 0%,
+    color-mix(in srgb, var(--theme-accent) 4%, #f0fdfa 96%) 50%,
+    color-mix(in srgb, var(--theme-accent) 5%, #ccfbf1 95%) 100%
+  ) !important;
+}
+
+/* Primary buttons */
+html[class*="theme-"] .bg-gradient-to-r.from-green-600.to-emerald-600 {
+  background-image: linear-gradient(90deg, var(--theme-accent), var(--theme-accent-hover)) !important;
+}
+
+html[class*="theme-"] .hover\:from-green-700:hover,
+html[class*="theme-"] .hover\:to-emerald-700:hover {
+  background-image: linear-gradient(90deg, var(--theme-accent-hover), var(--theme-accent)) !important;
+}
+
+/* Other green/emerald button backgrounds */
+html[class*="theme-"] .bg-gradient-to-r.from-green-600 {
+  background-image: linear-gradient(90deg, var(--theme-accent), var(--theme-accent-hover)) !important;
+}
+
+/* Text accents */
+html[class*="theme-"] .text-emerald-300 { color: var(--theme-text-accent-dark) !important; }
+html[class*="theme-"] .text-emerald-200 { color: var(--theme-text-accent-dark) !important; }
+html[class*="theme-"] .text-emerald-600 { color: var(--theme-accent) !important; }
+html[class*="theme-"] .text-green-800 { color: var(--theme-text-accent) !important; }
+html[class*="theme-"] .text-green-700 { color: var(--theme-text-accent) !important; }
+html[class*="theme-"] .text-green-600 { color: var(--theme-accent) !important; }
+
+/* Border accents */
+html[class*="theme-"] .border-emerald-800 { border-color: var(--theme-border) !important; }
+html[class*="theme-"] .border-emerald-900 { border-color: var(--theme-border) !important; }
+html[class*="theme-"] .border-green-200 {
+  border-color: color-mix(in srgb, var(--theme-accent) 25%, transparent) !important;
+}
+
+/* Card backgrounds (glassmorphism) */
+html[class*="theme-"] .dark\/80 {
+  background: color-mix(in srgba, var(--theme-bg) 40%, rgba(0, 0, 0, 0.4)) !important;
+}
+
+/* Scrollbar thumb - dark mode */
+html[class*="theme-"] .dark ::-webkit-scrollbar-thumb {
+  background: var(--theme-shadow);
+}
+
+/* Gradient text (brand name on login) */
+html[class*="theme-"] .bg-clip-text.text-transparent {
+  background-image: linear-gradient(135deg, var(--theme-accent), var(--theme-accent-hover)) !important;
+}
+
+/* Glow effects */
+html[class*="theme-"] .shadow-\[0_0_20px_rgba\(16\,_185\,_129\,_0\.3\)\] {
+  box-shadow: 0 0 20px var(--theme-shadow), 0 0 40px color-mix(in srgb, var(--theme-accent) 10%, transparent) !important;
+}
+
+/* ===== Theme-specific scrollbar (light mode) */
+html[class*="theme-"] ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--theme-text-accent) 15%, transparent);
   border-radius: 10px;
 }
-.dark ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); }
 
 /* Animations */
 @keyframes float {

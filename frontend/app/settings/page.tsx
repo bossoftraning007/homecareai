@@ -10,7 +10,15 @@ const themes = [
   { id: 'sunset', name: 'Sunset', icon: '🌅', color: 'from-orange-500 to-red-600', preview: 'bg-gradient-to-br from-orange-50 to-yellow-100' },
   { id: 'lavender', name: 'Lavender', icon: '💜', color: 'from-purple-500 to-pink-600', preview: 'bg-gradient-to-br from-purple-50 to-pink-100' },
   { id: 'rose', name: 'Rose', icon: '🌹', color: 'from-pink-500 to-rose-600', preview: 'bg-gradient-to-br from-pink-50 to-rose-100' },
+  { id: 'midnight', name: 'Midnight', icon: '🌙', color: 'from-indigo-500 to-purple-600', preview: 'bg-gradient-to-br from-indigo-50 to-purple-100' },
+  { id: 'sunnyside', name: 'Sunnyside', icon: '☀️', color: 'from-amber-400 to-yellow-500', preview: 'bg-gradient-to-br from-yellow-50 to-amber-100' },
+  { id: 'ember', name: 'Ember', icon: '🔥', color: 'from-red-500 to-orange-600', preview: 'bg-gradient-to-br from-red-50 to-orange-100' },
+  { id: 'cosmic', name: 'Cosmic', icon: '🌌', color: 'from-violet-500 to-indigo-600', preview: 'bg-gradient-to-br from-violet-50 to-indigo-100' },
+  { id: 'mint', name: 'Mint', icon: '🍃', color: 'from-teal-400 to-green-500', preview: 'bg-gradient-to-br from-teal-50 to-green-100' },
+  { id: 'desert', name: 'Desert', icon: '🏜️', color: 'from-amber-600 to-orange-700', preview: 'bg-gradient-to-br from-amber-50 to-orange-100' },
+  { id: 'graphite', name: 'Graphite', icon: '⚡', color: 'from-gray-500 to-slate-600', preview: 'bg-gradient-to-br from-gray-50 to-slate-100' },
 ]
+
 
 const THEME_KEY = 'homecare_color_theme'
 
