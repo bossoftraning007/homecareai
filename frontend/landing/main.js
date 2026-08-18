@@ -58,6 +58,17 @@
   var burger = document.querySelector('.burger');
   var overlay = document.querySelector('.mobile-overlay');
 
+  var video = document.querySelector('.bg-video');
+  if (video) {
+    var onVideoReady = function () {
+      document.body.classList.add('bg-video-loaded');
+      video.removeEventListener('playing', onVideoReady);
+      video.removeEventListener('canplay', onVideoReady);
+    };
+    video.addEventListener('playing', onVideoReady);
+    video.addEventListener('canplay', onVideoReady);
+  }
+
   if (burger && overlay) {
     function closeMenu() {
       burger.setAttribute('aria-expanded', 'false');

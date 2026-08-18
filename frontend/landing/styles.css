@@ -43,9 +43,15 @@ body {
 .bg {
   position: fixed;
   inset: 0;
-  background: var(--bg);
+  background: radial-gradient(circle at 30% 30%, #0a0a0f 0%, #000 100%);
+  background-size: 150% 150%;
   overflow: hidden;
   z-index: 0;
+  animation: bgPulse 30s ease-in-out infinite;
+}
+
+.bg-video-loaded .bg {
+  animation: none;
 }
 
 .bg-video {
@@ -434,6 +440,11 @@ body {
   100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
+@keyframes bgPulse {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
 @keyframes slideDown {
   0% { opacity: 0; transform: translateY(-18px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -575,6 +586,10 @@ body {
 
 /* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
+  .bg {
+    animation: none !important;
+  }
+
   .anim,
   .headline-line,
   .cta {
