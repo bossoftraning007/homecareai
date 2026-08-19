@@ -8,9 +8,9 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 MODELS = [
-    "llama-3.1-8b-instant",
     "llama-3.3-70b-versatile",
     "llama-3.1-70b-versatile",
+    "llama-3.1-8b-instant",
 ]
 
 
@@ -83,9 +83,12 @@ Body aches
             if "rate_limit" in error_str.lower() or "429" in error_str:
                 last_error = e
                 continue
+            if "model" in error_str.lower() or "404" in error_str:
+                last_error = e
+                continue
             raise e
 
-    raise Exception(f"All models rate limited. Details: {last_error}")
+    raise Exception(f"All models unavailable. Last error: {last_error}")
 
 
 def parse_ai_response(content: str) -> dict:
