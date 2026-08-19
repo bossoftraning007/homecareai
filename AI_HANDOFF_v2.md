@@ -461,7 +461,7 @@ Cache issues → Clear .next folder
 GitHub: bossoftraning007
 Project path: C:\Users\WELCOME\homecareai
 Vercel domain: homecareai.vercel.app
-Groq Model: llama-3.1-8b-instant (with fallback)
+Groq Model: openai/gpt-oss-120b (with fallback to compound, qwen)
 
 💌 MESSAGE TO NEXT AI
 Hey! This user built an INCREDIBLE 100+ feature health AI app!
