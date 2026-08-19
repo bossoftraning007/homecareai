@@ -30,6 +30,7 @@ const features = [
   { icon: '📊', label: 'Wellness Tracker', href: '/tracker', color: 'from-blue-500 to-indigo-500', desc: 'Track mood, water, sleep' },
   { icon: '⏰', label: 'Reminders', href: '/reminders', color: 'from-purple-500 to-pink-500', desc: 'Medicine & wellness alerts' },
   { icon: '🚨', label: 'Emergency', href: '/emergency', color: 'from-red-500 to-orange-500', desc: 'Quick access to helplines' },
+  { icon: '💊', label: 'Medication', href: '/medications', color: 'from-emerald-500 to-green-600', desc: 'Track daily medications' },
 ]
 
 const API_URL = 'https://homecareai-backend.onrender.com'

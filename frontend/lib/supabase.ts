@@ -75,3 +75,18 @@ export type Reminder = {
   active: boolean
   created_at: string
 }
+
+export type Medication = {
+  id?: string
+  user_id?: string
+  name: string
+  dosage: string | null
+  frequency: string
+  times: string[]
+  notes: string | null
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export const MEDICATION_STORAGE_KEY = 'homecare_medications'
