@@ -64,7 +64,10 @@ export type WellnessEntry = {
   exercise: boolean
   notes: string | null
   created_at: string
+  date?: string
 }
+
+export const TRACKER_KEY = 'homecare_tracker'
 
 export type Reminder = {
   id: string
