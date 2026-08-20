@@ -2,6 +2,7 @@ import os
 import json
 from groq import Groq
 from dotenv import load_dotenv
+from services.language_detector import detect_language_simple
 
 load_dotenv()
 
@@ -29,10 +30,18 @@ def load_symptom_data():
         return json.load(f)
 
 
-def get_ai_response(messages: list) -> dict:
-    """Get AI response with follow-up suggestions and related symptoms."""
+def build_prompt(messages: list) -> tuple:
+    """Build the enhanced prompt with knowledge base and detected language."""
     system_prompt = load_system_prompt()
     symptom_data = load_symptom_data()
+
+    latest_user_msg = ""
+    for msg in reversed(messages):
+        if msg.get("role") == "user":
+            latest_user_msg = msg["content"]
+            break
+
+    detected_lang = detect_language_simple(latest_user_msg)
 
     enhanced_prompt = f"""{system_prompt}
 
@@ -40,6 +49,8 @@ NATURAL REMEDIES KNOWLEDGE BASE:
 {json.dumps(symptom_data, indent=2)}
 
 Use this knowledge base to provide accurate, natural, safe home care guidance.
+
+DETECTED USER LANGUAGE: {detected_lang} (respond in this language, or English if uncertain)
 
 IMPORTANT - After your main response, ALWAYS include these sections at the END:
 
@@ -64,6 +75,12 @@ Sore throat
 Sinus infection
 Body aches
 """
+    return enhanced_prompt, detected_lang
+
+
+def get_ai_response(messages: list) -> dict:
+    """Get AI response with follow-up suggestions and related symptoms."""
+    enhanced_prompt, detected_lang = build_prompt(messages)
 
     full_messages = [
         {"role": "system", "content": enhanced_prompt}
@@ -77,10 +94,12 @@ Body aches
                 model=model,
                 messages=full_messages,
                 max_tokens=1000,
-                temperature=0.5
+                temperature=0.3,
             )
             content = response.choices[0].message.content
-            return parse_ai_response(content)
+            result = parse_ai_response(content)
+            result["language"] = detected_lang
+            return result
         except Exception as e:
             error_str = str(e)
             if "rate_limit" in error_str.lower() or "429" in error_str:
@@ -94,13 +113,63 @@ Body aches
     raise Exception(f"All models unavailable. Last error: {last_error}")
 
 
+def get_ai_response_stream(messages: list):
+    """Stream AI response as Server-Sent Events (SSE)."""
+    enhanced_prompt, detected_lang = build_prompt(messages)
+
+    full_messages = [
+        {"role": "system", "content": enhanced_prompt}
+    ] + messages
+
+    last_error = None
+
+    for model in MODELS:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=full_messages,
+                max_tokens=1000,
+                temperature=0.3,
+                stream=True,
+            )
+            full_content = ""
+            for chunk in response:
+                content_chunk = chunk.choices[0].delta.content or ""
+                if content_chunk:
+                    full_content += content_chunk
+                    yield content_chunk
+
+            yield "\n===STREAM_END===\n"
+
+            result = parse_ai_response(full_content)
+            followups_json = json.dumps(result.get("followups", []))
+            related_json = json.dumps(result.get("related", []))
+
+            yield f"\n===FOLLOWUPS||{followups_json}===\n"
+            yield f"\n===RELATED||{related_json}===\n"
+            yield f"\n===LANG||{detected_lang}===\n"
+
+            return
+        except Exception as e:
+            error_str = str(e)
+            if "rate_limit" in error_str.lower() or "429" in error_str:
+                last_error = e
+                continue
+            if "model" in error_str.lower() or "404" in error_str:
+                last_error = e
+                continue
+            raise e
+
+    error_msg = f"All models unavailable. Last error: {last_error}"
+    yield f"\n===ERROR||{error_msg}===\n"
+
+
 def parse_ai_response(content: str) -> dict:
     """Parse AI response to extract main message, followups, and related symptoms."""
     followups = []
     related = []
     main_content = content
 
-    # Extract followups
     if "===FOLLOWUPS===" in content:
         parts = content.split("===FOLLOWUPS===")
         main_content = parts[0].strip()
@@ -109,19 +178,19 @@ def parse_ai_response(content: str) -> dict:
         if "===RELATED===" in rest:
             fp_part, rel_part = rest.split("===RELATED===")
             followups = [
-                line.strip() 
-                for line in fp_part.strip().split("\n") 
+                line.strip()
+                for line in fp_part.strip().split("\n")
                 if line.strip() and not line.startswith("===")
             ][:3]
             related = [
-                line.strip() 
-                for line in rel_part.strip().split("\n") 
+                line.strip()
+                for line in rel_part.strip().split("\n")
                 if line.strip() and not line.startswith("===")
             ][:3]
         else:
             followups = [
-                line.strip() 
-                for line in rest.strip().split("\n") 
+                line.strip()
+                for line in rest.strip().split("\n")
                 if line.strip() and not line.startswith("===")
             ][:3]
 

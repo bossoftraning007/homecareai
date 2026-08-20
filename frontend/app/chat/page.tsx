@@ -1,6 +1,5 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
@@ -221,40 +220,109 @@ export default function ChatPage() {
     }
 
     try {
-      const res = await axios.post(`${API_URL}/api/chat`, {
-        messages: updatedMessages.map(m => ({ 
-          role: m.role, 
-          content: m.content 
-        }))
-      })
-
       const assistantMsg: Message = {
         id: generateId('assistant'),
         role: 'assistant',
-        content: res.data.reply,
-        is_emergency: res.data.is_emergency,
+        content: '',
+        is_emergency: false,
         timestamp: new Date().toISOString(),
-        followups: res.data.followups || [],
-        related: res.data.related || [],
       }
-      const newMessages = [...updatedMessages, assistantMsg]
-      setMessages(newMessages)
+      setMessages(msgs => [...msgs, assistantMsg])
+
+      const res = await fetch(`${API_URL}/api/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content }))
+        }),
+      })
+
+      let fullContent = ''
+      let followups: string[] = []
+      let related: string[] = []
+      let isEmergency = false
+
+      if (res.body) {
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value, { stream: true })
+
+          if (chunk.includes('===ERROR||')) {
+            const match = chunk.match(/===ERROR\|(.*?)\|\|===/)
+            if (match) {
+              isEmergency = true
+              fullContent = match[1]
+            }
+            break
+          }
+
+          if (chunk.includes('===FOLLOWUPS||')) {
+            const match = chunk.match(/===FOLLOWUPS\|(.*?)\|===/)
+            if (match) {
+              try { followups = JSON.parse(match[1]) } catch {}
+            }
+            continue
+          }
+
+          if (chunk.includes('===RELATED||')) {
+            const match = chunk.match(/===RELATED\|(.*?)\|===/)
+            if (match) {
+              try { related = JSON.parse(match[1]) } catch {}
+            }
+            continue
+          }
+
+          if (chunk.includes('===LANG||')) {
+            continue
+          }
+
+          if (chunk.includes('===STREAM_END===')) {
+            continue
+          }
+
+          if (!chunk.includes('===')) {
+            fullContent += chunk
+            setMessages(msgs => msgs.map(m =>
+              m.id === assistantMsg.id
+                ? { ...m, content: fullContent }
+                : m
+            ))
+          }
+        }
+      }
+
+      const finalMsg: Message = {
+        id: generateId('assistant'),
+        role: 'assistant',
+        content: fullContent || t.errorMsg,
+        is_emergency: isEmergency,
+        timestamp: new Date().toISOString(),
+        followups: followups.length ? followups : [],
+        related: related.length ? related : [],
+      }
+
+      setMessages(msgs => msgs.map(m => m.id === assistantMsg.id ? finalMsg : m))
 
       if (user && currentSessionId) {
         await supabase.from('messages').insert({
           session_id: currentSessionId,
           user_id: user.id,
           role: 'assistant',
-          content: res.data.reply,
-          is_emergency: res.data.is_emergency || false,
-          followups: res.data.followups || [],
-          related: res.data.related || [],
+          content: fullContent || t.errorMsg,
+          is_emergency: isEmergency,
+          followups: followups.length ? followups : [],
+          related: related.length ? related : [],
         })
       }
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...updatedMessages, finalMsg]))
 
-      if (res.data.is_emergency) {
+      if (isEmergency) {
         toast.error(t.emergency, { icon: '🚨', duration: 5000 })
       }
     } catch (err) {
