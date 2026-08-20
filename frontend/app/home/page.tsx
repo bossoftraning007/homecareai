@@ -34,6 +34,7 @@ const features = [
   { icon: '🚨', label: 'Emergency', href: '/emergency', color: 'from-red-500 to-orange-500', desc: 'Quick access to helplines' },
   { icon: '💊', label: 'Medication', href: '/medications', color: 'from-emerald-500 to-green-600', desc: 'Track daily medications' },
   { icon: '📊', label: 'Health Insights', href: '/insights', color: 'from-blue-500 to-cyan-500', desc: 'AI-powered health insights' },
+  { icon: '📆', label: 'Symptom Timeline', href: '/symptoms-timeline', color: 'from-indigo-500 to-purple-500', desc: 'Pattern analysis' },
 ]
 
 const dailyTips = [
@@ -399,6 +400,16 @@ export default function HomePage() {
             </div>
           </Link>
         </motion.div>
+
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} whileHover={{ y: -5 }} className="col-span-6 sm:col-span-3 md:col-span-3">
+          <Link href="/symptoms-timeline">
+            <div className="h-full min-h-[140px] p-5 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-xl group cursor-pointer">
+              <div className="text-3xl mb-2">📆</div>
+              <h3 className="text-md font-black">Timeline</h3>
+              <p className="text-white/80 text-xs mt-1">Pattern analysis</p>
+            </div>
+          </Link>
+        </motion.div>
       </motion.div>
 
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="grid grid-cols-3 gap-3 mb-6">
@@ -407,6 +418,7 @@ export default function HomePage() {
               { icon: '⏰', label: 'Reminders', href: '/reminders', color: 'from-purple-500 to-pink-500' },
               { icon: '💊', label: 'Medication', href: '/medications', color: 'from-emerald-500 to-green-600' },
               { icon: '📊', label: 'Insights', href: '/insights', color: 'from-blue-500 to-cyan-500' },
+              { icon: '📆', label: 'Timeline', href: '/symptoms-timeline', color: 'from-indigo-500 to-purple-500' },
               { icon: '⚙️', label: 'Settings', href: '/settings', color: 'from-gray-500 to-slate-600' },
             ].map((item, i) => (
               <motion.div key={item.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -3 }}>

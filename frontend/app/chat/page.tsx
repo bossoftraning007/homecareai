@@ -32,6 +32,7 @@ const features = [
   { icon: '🚨', label: 'Emergency', href: '/emergency', color: 'from-red-500 to-orange-500', desc: 'Quick access to helplines' },
   { icon: '💊', label: 'Medication', href: '/medications', color: 'from-emerald-500 to-green-600', desc: 'Track daily medications' },
   { icon: '📊', label: 'Health Insights', href: '/insights', color: 'from-blue-500 to-cyan-500', desc: 'AI-powered health insights' },
+  { icon: '📆', label: 'Symptom Timeline', href: '/symptoms-timeline', color: 'from-indigo-500 to-purple-500', desc: 'Pattern analysis' },
 ]
 
 const API_URL = 'https://homecareai-backend.onrender.com'
