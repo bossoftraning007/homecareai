@@ -1,6 +1,6 @@
 import os
 import json
-from webpush import webpush
+from pywebpush import webpush
 
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
