@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.chat import router as chat_router
 from routes.push import router as push_router
 from routes.stream import router as stream_router
-# Force redeploy for streaming endpoint
+# Redeploy: streaming endpoint should be active
 
 app = FastAPI(
     title="HomeCare AI",
