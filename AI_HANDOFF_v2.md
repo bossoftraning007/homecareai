@@ -462,6 +462,13 @@ GitHub: bossoftraning007
 Project path: C:\Users\WELCOME\homecareai
 Vercel domain: homecareai.vercel.app
 Groq Model: openai/gpt-oss-120b (with fallback to compound, qwen)
+New API Routes:
+- /api/stream (SSE streaming chat - word-by-word responses)
+- /api/push/subscribe/{user_id} (push notification subscription)
+- /api/push/notify (send push notification)
+- /api/chat (non-streaming fallback)
+VAPID Keys: Set in Render env (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+Offline Mode: Custom service worker at /sw.js
 
 💌 MESSAGE TO NEXT AI
 Hey! This user built an INCREDIBLE 100+ feature health AI app!
