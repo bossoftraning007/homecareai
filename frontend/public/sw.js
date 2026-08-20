@@ -14,7 +14,7 @@ const urlsToCache = [
   '/logo.svg',
 ]
 
-self.addEventListener('install', (event: ExtendableEvent) => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
@@ -22,7 +22,7 @@ self.addEventListener('install', (event: ExtendableEvent) => {
   )
 })
 
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(cacheNames =>
       Promise.all(
@@ -36,11 +36,43 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
   )
 })
 
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('push', (event) => {
+  if (!event.data) return
+  const data = event.data.json()
+  const options = {
+    body: data.body,
+    icon: data.icon || '/logo.svg',
+    badge: '/logo.svg',
+    data: data.data || {},
+    tag: data.tag || 'homecare-notification',
+    renotify: true,
+    requireInteraction: data.requireInteraction || false,
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const urlToOpen = event.notification.data?.url || '/'
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(windowClients => {
+        const matching = windowClients.find(client => client.url === urlToOpen)
+        if (matching) {
+          return matching.focus()
+        }
+        return clients.openWindow(urlToOpen)
+      })
+  )
+})
+
+self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  if (url.pathname.startsWith('/_next/') || url.pathname.match(/\.(css|js|png|jpg|jpeg|svg|webp|ico|woff|woff2|ttf|eot)$/)) {
+  if (url.pathname.startsWith('/_next/') || url.pathname.match(/(png|jpg|jpeg|svg|webp|ico|woff|woff2|ttf|eot)$/)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache =>
         cache.match(request).then(cachedResponse => {

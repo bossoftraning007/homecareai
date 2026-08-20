@@ -4,8 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
+import axios from 'axios'
 import { useAuth } from '@/lib/useAuth'
 import { supabase, type Medication, MEDICATION_STORAGE_KEY } from '@/lib/supabase'
+import { usePushNotifications } from '@/app/components/usePushNotifications'
+
+const API_URL = 'https://homecareai-backend.onrender.com'
 
 const FREQUENCIES = ['Once daily', 'Twice daily', 'Three times daily', 'Four times daily', 'As needed']
 const TIME_OPTIONS = ['Morning', 'Afternoon', 'Evening', 'Night', 'Before bed', 'With food']
@@ -28,6 +32,7 @@ export default function MedicationsPage() {
   })
 
   const isDark = theme === 'dark'
+  const { subscribed, permission, subscribe } = usePushNotifications(user?.id ?? null)
 
   const loadFromLocal = () => {
     const saved = localStorage.getItem(MEDICATION_STORAGE_KEY)
@@ -231,13 +236,47 @@ export default function MedicationsPage() {
             <div className={`font-bold text-lg ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
               Medication Tracker
             </div>
-            <div className={`text-xs flex items-center gap-1 ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
+            <div className={`text-xs ${isDark ? 'text-emerald-300/70' : 'text-green-700/70'}`}>
               {user && <span className="text-blue-500">☁️</span>}
               {activeCount} active · {inactiveCount} inactive
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {user && permission === 'granted' && !subscribed && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={subscribe}
+              className={`text-xs px-3 py-2 rounded-full border ${isDark ? 'bg-gray-800/70 border-emerald-800 text-emerald-300' : 'bg-white/70 border-green-200 text-green-700'}`}
+            >
+              🔔 Enable Reminders
+            </motion.button>
+          )}
+          {subscribed && (
+            <>
+              <span className="text-xs text-green-500">🔔 On</span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={async () => {
+                  try {
+                    await axios.post(`${API_URL}/api/push/notify`, {
+                      user_id: user!.id,
+                      title: 'Medication Reminder',
+                      body: 'Time to take your medication!',
+                    })
+                    toast.success('🔔 Notification sent!')
+                  } catch {
+                    toast.error('Failed to send')
+                  }
+                }}
+                className="text-xs px-2 py-1 rounded-full border bg-blue-500/20 border-blue-400 text-blue-300 hover:bg-blue-500/30"
+              >
+                Test
+              </motion.button>
+            </>
+          )}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
