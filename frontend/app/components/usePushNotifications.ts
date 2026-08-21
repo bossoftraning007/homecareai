@@ -2,9 +2,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-const API_URL = 'https://homecareai-backend.onrender.com'
-
-const VAPID_PUBLIC_KEY = 'BMteya2R9Bz4hn834x7Sm0-dm0TZfmeBJHQpDttZOmuvxSkk0zCvuZ4BSSDVtqQoYrdUoTu1q8kzjZFfy1kfmKM'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://homecareai-backend.onrender.com'
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4)

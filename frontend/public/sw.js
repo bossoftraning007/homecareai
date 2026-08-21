@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homecare-ai-cache-v1'
+const CACHE_NAME = 'homecare-ai-cache-v2'
 const OFFLINE_PAGE = '/offline'
 
 const urlsToCache = [
@@ -72,6 +72,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
+  // Never cache API responses - they contain sensitive health data
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request))
+    return
+  }
+
   if (url.pathname.startsWith('/_next/') || url.pathname.match(/(png|jpg|jpeg|svg|webp|ico|woff|woff2|ttf|eot)$/)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache =>
@@ -83,21 +89,6 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse || networkFetch
         }).catch(() => cachedResponse)
       ).catch(() => new Response('', { status: 200, statusText: 'OK' }))
-    )
-    return
-  }
-
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request).then(response => {
-        const cloned = response.clone()
-        caches.open(CACHE_NAME).then(cache => cache.put(request, cloned))
-        return response
-      }).catch(() =>
-        caches.match(request).then(cached => cached || new Response(JSON.stringify({ offline: true }), {
-          headers: { 'Content-Type': 'application/json' },
-        }))
-      )
     )
     return
   }

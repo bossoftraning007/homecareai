@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase, type Medication, MEDICATION_STORAGE_KEY } from '@/lib/supabase'
 import { usePushNotifications } from '@/app/components/usePushNotifications'
 
-const API_URL = 'https://homecareai-backend.onrender.com'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://homecareai-backend.onrender.com'
 
 const FREQUENCIES = ['Once daily', 'Twice daily', 'Three times daily', 'Four times daily', 'As needed']
 const TIME_OPTIONS = ['Morning', 'Afternoon', 'Evening', 'Night', 'Before bed', 'With food']

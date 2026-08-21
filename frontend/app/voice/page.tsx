@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 import { translations, languageOptions, getSpeechLang, type Language } from '@/lib/translations'
 
-const API_URL = 'https://homecareai-backend.onrender.com'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://homecareai-backend.onrender.com'
 const STORAGE_KEY = 'homecare_chat_history'
 const LANG_KEY = 'homecare_language'
 

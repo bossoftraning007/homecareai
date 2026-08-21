@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 from fastapi.responses import StreamingResponse
 from services.safety_check import check_red_flags, get_urgent_message
@@ -9,12 +9,12 @@ router = APIRouter()
 
 
 class Message(BaseModel):
-    role: str
-    content: str
+    role: str = Field(..., pattern="^(user|assistant|system)$")
+    content: str = Field(..., max_length=2000)
 
 
 class ChatRequest(BaseModel):
-    messages: List[Message]
+    messages: List[Message] = Field(..., max_length=20)
 
 
 @router.post("/stream")

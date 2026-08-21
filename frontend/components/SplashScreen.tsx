@@ -10,8 +10,10 @@ type Particle = {
   delay: number
 }
 
+const SPLASH_KEY = 'homecare_splash_seen'
+
 export default function SplashScreen() {
-  const [show, setShow] = useState(true)
+  const [show, setShow] = useState(false)
   const [phase, setPhase] = useState(0)
   const [particles, setParticles] = useState<Particle[]>([])
   const [mounted, setMounted] = useState(false)
@@ -20,6 +22,16 @@ export default function SplashScreen() {
   useEffect(() => {
     setMounted(true)
 
+    // Check if splash was already seen in this session
+    const hasSeen = sessionStorage.getItem(SPLASH_KEY)
+    if (hasSeen) {
+      return // Don't show splash again
+    }
+
+    // Mark as seen
+    sessionStorage.setItem(SPLASH_KEY, '1')
+    setShow(true)
+
     // Detect phone
     const phone = window.innerWidth < 768
     setIsPhone(phone)
@@ -27,7 +39,7 @@ export default function SplashScreen() {
     const width = window.innerWidth
     const height = window.innerHeight
 
-    // Phone = 20 particles, Laptop = 40 particles (was 60!)
+    // Phone = 20 particles, Laptop = 40 particles
     const count = phone ? 20 : 40
 
     const newParticles: Particle[] = Array.from({ length: count }, (_, i) => ({
@@ -46,7 +58,7 @@ export default function SplashScreen() {
       setTimeout(() => setPhase(4), 3000),
       setTimeout(() => {
         setShow(false)
-      }, 3600), // 3.6s total (was 4.2s)
+      }, 3600), // 3.6s total
     ]
     return () => timers.forEach(clearTimeout)
   }, [])

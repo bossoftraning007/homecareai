@@ -41,7 +41,7 @@ type ChartDatum = {
 }
 
 const CHAT_HISTORY_KEY = 'homecare_chat_history'
-const API_URL = 'https://homecareai-backend.onrender.com'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://homecareai-backend.onrender.com'
 
 const SYMPTOM_KEYWORDS: Record<string, { name: string; icon: string }> = {}
 Object.values(symptomsData).forEach(s => {

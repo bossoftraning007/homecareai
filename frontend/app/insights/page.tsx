@@ -27,7 +27,7 @@ type Stats = {
   activeMeds: number
 }
 
-const API_URL = 'https://homecareai-backend.onrender.com'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://homecareai-backend.onrender.com'
 
 export default function InsightsPage() {
   const { theme } = useTheme()

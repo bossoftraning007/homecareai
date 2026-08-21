@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -55,25 +55,29 @@ export default function HomePage() {
   const [search, setSearch] = useState('')
   const [tipIndex, setTipIndex] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isDark = theme === 'dark'
 
   useEffect(() => {
     setMounted(true)
     setTipIndex(Math.floor(Math.random() * dailyTips.length))
+    return () => {
+      if (navigateTimeoutRef.current) clearTimeout(navigateTimeoutRef.current)
+    }
   }, [])
 
-  const filteredSymptoms = symptoms.filter(s =>
-    s.label.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const handleSymptom = (value: string, label: string) => {
+  const navigateToChat = useCallback((value: string, label: string) => {
     localStorage.setItem('initial_message', value)
     toast.success(`Getting remedies for ${label}...`, { icon: '🌿' })
-    setTimeout(() => router.push('/chat'), 500)
-  }
+    navigateTimeoutRef.current = setTimeout(() => router.push('/chat'), 500)
+  }, [router])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSymptom = useCallback((value: string, label: string) => {
+    navigateToChat(value, label)
+  }, [navigateToChat])
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) {
       toast.error('Please describe your symptom!')
@@ -81,8 +85,8 @@ export default function HomePage() {
     }
     localStorage.setItem('initial_message', input)
     toast.success('Getting remedies...', { icon: '🌿' })
-    setTimeout(() => router.push('/chat'), 500)
-  }
+    navigateTimeoutRef.current = setTimeout(() => router.push('/chat'), 500)
+  }, [input, router])
 
   const handleLogout = async () => {
     if (confirm('Logout?')) {
@@ -92,6 +96,10 @@ export default function HomePage() {
   }
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0]
+
+  const filteredSymptoms = symptoms.filter(s =>
+    s.label.toLowerCase().includes(search.toLowerCase())
+  )
 
   if (!mounted) return null
 

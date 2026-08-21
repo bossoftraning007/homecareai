@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 from services.safety_check import check_red_flags, get_urgent_message
 from services.ai_service import get_ai_response
@@ -8,12 +8,12 @@ router = APIRouter()
 
 
 class Message(BaseModel):
-    role: str
-    content: str
+    role: str = Field(..., pattern="^(user|assistant|system)$")
+    content: str = Field(..., max_length=2000)
 
 
 class ChatRequest(BaseModel):
-    messages: List[Message]
+    messages: List[Message] = Field(..., max_length=20)
 
 
 class ChatResponse(BaseModel):
@@ -55,9 +55,9 @@ async def chat(request: ChatRequest):
             followups=result.get("followups", []),
             related=result.get("related", [])
         )
-    except Exception as e:
+    except Exception:
         return ChatResponse(
-            reply=f"❌ Sorry, something went wrong: {str(e)}",
+            reply="Sorry, something went wrong. Please try again.",
             is_emergency=False,
             followups=[],
             related=[]

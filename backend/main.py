@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from routes.chat import router as chat_router
 from routes.push import router as push_router
 from routes.stream import router as stream_router
-# Redeploy: streaming endpoint should be active
+import time
 
 app = FastAPI(
     title="HomeCare AI",
@@ -11,14 +12,57 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS - allow all origins for testing
+# CORS - restricted to known origins
+ALLOWED_ORIGINS = [
+    "https://homecareai.vercel.app",
+    "https://homecareai-git-main.vercel.app",
+    "https://homecareai-git-deploy.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
+
+# Simple rate limiting (in-memory)
+rate_limit_store = {}
+
+@app.middleware("http")
+async def rate_limiter(request: Request, call_next):
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    
+    # Clean old entries
+    if client_ip in rate_limit_store:
+        rate_limit_store[client_ip] = [
+            t for t in rate_limit_store[client_ip] if now - t < 60
+        ]
+    else:
+        rate_limit_store[client_ip] = []
+    
+    # Limit: 30 requests per minute per IP
+    if len(rate_limit_store.get(client_ip, [])) >= 30:
+        return JSONResponse(
+            status_code=429,
+            content={"error": "Too many requests. Please wait a moment."}
+        )
+    
+    rate_limit_store[client_ip].append(now)
+    response = await call_next(request)
+    return response
+
+# Global exception handler - never leak internal errors
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Something went wrong. Please try again later."}
+    )
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(push_router, prefix="/api/push")

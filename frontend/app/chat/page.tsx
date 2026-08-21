@@ -34,7 +34,7 @@ const features = [
   { icon: '📆', label: 'Symptom Timeline', href: '/symptoms-timeline', color: 'from-indigo-500 to-purple-500', desc: 'Pattern analysis' },
 ]
 
-const API_URL = 'https://homecareai-backend.onrender.com'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://homecareai-backend.onrender.com'
 const STORAGE_KEY = 'homecare_chat_history'
 const LANG_KEY = 'homecare_language'
 const FAV_KEY = 'homecare_favorites'
