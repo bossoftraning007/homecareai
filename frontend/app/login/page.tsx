@@ -43,7 +43,20 @@ export default function LoginPage() {
       if (error) {
         toast.error(error.message)
       } else {
-        toast.success('Check your email to verify!', { icon: '📧', duration: 5000 })
+        toast.success('Account created! Check your email 📧', { icon: '🎉', duration: 5000 })
+        // Trigger welcome email
+        try {
+          await fetch('/api/auth/webhook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              event: 'signup',
+              user_id: email,
+              email: email,
+              full_name: fullName,
+            }),
+          })
+        } catch {}
         setMode('login')
       }
     } else {
@@ -61,7 +74,11 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     const { error } = await signInWithGoogle()
-    if (error) toast.error(error.message)
+    if (error) {
+      toast.error(error.message)
+    } else {
+      toast.success('Welcome! 🌿', { icon: '🎉' })
+    }
   }
 
   if (!mounted) return null
