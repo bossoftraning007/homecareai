@@ -4,20 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from 'recharts'
 
 type AdminTab = 'overview' | 'symptoms' | 'ai-logs' | 'users' | 'emergency' | 'analytics' | 'settings'
 
@@ -55,8 +41,6 @@ type SOSAlert = {
   created_at: string
 }
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
-
 export default function AdminDashboard() {
   const { user } = useAuth()
   const [mounted, setMounted] = useState(false)
@@ -64,21 +48,16 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [loading, setLoading] = useState(true)
 
-  // Real data states
   const [symptoms, setSymptoms] = useState<SymptomEntry[]>([])
   const [chatLogs, setChatLogs] = useState<ChatLog[]>([])
   const [users, setUsers] = useState<UserEntry[]>([])
   const [sosAlerts, setSosAlerts] = useState<SOSAlert[]>([])
 
-  // Real stats
   const [totalUsers, setTotalUsers] = useState(0)
   const [activeToday, setActiveToday] = useState(0)
   const [queriesToday, setQueriesToday] = useState(0)
   const [sosCount, setSosCount] = useState(0)
-  const [voiceCount, setVoiceCount] = useState(0)
-  const [textCount, setTextCount] = useState(0)
 
-  // Form states
   const [showSymptomForm, setShowSymptomForm] = useState(false)
   const [editingSymptom, setEditingSymptom] = useState<SymptomEntry | null>(null)
   const [symptomForm, setSymptomForm] = useState({
@@ -101,7 +80,6 @@ export default function AdminDashboard() {
       loadSymptoms(),
       loadChatLogs(),
       loadSOSAlerts(),
-      loadStats(),
     ])
     setLoading(false)
   }
@@ -113,22 +91,24 @@ export default function AdminDashboard() {
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Profiles error:', error)
+      if (error || !profiles) {
+        setTotalUsers(0)
         return
       }
 
-      if (profiles) {
-        const userEntries: UserEntry[] = profiles.map((p: any) => ({
-          id: p.id,
-          email: p.email || 'No email',
-          full_name: p.full_name || 'Unknown',
-          created_at: p.created_at,
-          last_sign_in: p.last_sign_in_at || null,
-        }))
-        setUsers(userEntries)
-        setTotalUsers(userEntries.length)
-      }
+      const userEntries: UserEntry[] = profiles.map((p: any) => ({
+        id: p.id,
+        email: p.email || 'No email',
+        full_name: p.full_name || 'Unknown',
+        created_at: p.created_at,
+        last_sign_in: p.last_sign_in_at || null,
+      }))
+      setUsers(userEntries)
+      setTotalUsers(userEntries.length)
+
+      const today = new Date().toISOString().split('T')[0]
+      const active = profiles.filter((p: any) => p.last_sign_in_at?.startsWith(today)).length
+      setActiveToday(active)
     } catch (err) {
       console.error('Failed to load users:', err)
     }
@@ -141,8 +121,7 @@ export default function AdminDashboard() {
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) {
-        // Table might not exist yet - load from JSON file
+      if (error || !data || data.length === 0) {
         const response = await fetch('/data/symptoms.json')
         if (response.ok) {
           const symptomsData = await response.json()
@@ -160,9 +139,7 @@ export default function AdminDashboard() {
         return
       }
 
-      if (data) {
-        setSymptoms(data as SymptomEntry[])
-      }
+      setSymptoms(data as SymptomEntry[])
     } catch (err) {
       console.error('Failed to load symptoms:', err)
     }
@@ -176,42 +153,40 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false })
         .limit(50)
 
-      if (error) {
-        console.error('Messages error:', error)
+      if (error || !messages) {
+        setQueriesToday(0)
         return
       }
 
-      if (messages) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, email')
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, email')
 
-        const emailMap = new Map()
-        if (profiles) {
-          profiles.forEach((p: any) => emailMap.set(p.id, p.email))
-        }
-
-        const logs: ChatLog[] = messages
-          .filter((m: any) => m.role === 'user')
-          .map((m: any) => ({
-            id: m.id,
-            user_id: m.user_id,
-            user_email: emailMap.get(m.user_id) || m.user_id.substring(0, 8) + '...',
-            query: m.content,
-            response: '',
-            timestamp: m.created_at,
-            is_emergency: m.is_emergency || false,
-          }))
-
-        setChatLogs(logs)
-        setQueriesToday(messages.filter((m: any) => {
-          const today = new Date().toISOString().split('T')[0]
-          return m.created_at?.startsWith(today)
-        }).length)
-
-        const emergencyCount = messages.filter((m: any) => m.is_emergency).length
-        setSosCount(emergencyCount)
+      const emailMap = new Map()
+      if (profiles) {
+        profiles.forEach((p: any) => emailMap.set(p.id, p.email))
       }
+
+      const logs: ChatLog[] = messages
+        .filter((m: any) => m.role === 'user')
+        .map((m: any) => ({
+          id: m.id,
+          user_id: m.user_id,
+          user_email: emailMap.get(m.user_id) || m.user_id.substring(0, 8) + '...',
+          query: m.content,
+          response: '',
+          timestamp: m.created_at,
+          is_emergency: m.is_emergency || false,
+        }))
+
+      setChatLogs(logs)
+
+      const today = new Date().toISOString().split('T')[0]
+      const todayCount = messages.filter((m: any) => m.created_at?.startsWith(today)).length
+      setQueriesToday(todayCount)
+
+      const emergencyCount = messages.filter((m: any) => m.is_emergency).length
+      setSosCount(emergencyCount)
     } catch (err) {
       console.error('Failed to load chat logs:', err)
     }
@@ -226,45 +201,18 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false })
         .limit(20)
 
-      if (error) {
-        console.error('SOS error:', error)
+      if (error || !data) {
+        setSosAlerts([])
         return
       }
 
-      if (data) {
-        setSosAlerts(data.map((d: any) => ({
-          id: d.id,
-          user_id: d.user_id,
-          created_at: d.created_at,
-        })))
-      }
+      setSosAlerts(data.map((d: any) => ({
+        id: d.id,
+        user_id: d.user_id,
+        created_at: d.created_at,
+      })))
     } catch (err) {
       console.error('Failed to load SOS alerts:', err)
-    }
-  }
-
-  const loadStats = async () => {
-    try {
-      const today = new Date().toISOString().split('T')[0]
-
-      const { count: activeCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gte('last_sign_in_at', today)
-
-      setActiveToday(activeCount || 0)
-
-      const { count: queryCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today)
-
-      setQueriesToday(queryCount || 0)
-
-      setTextCount(queryCount || 0)
-      setVoiceCount(0)
-    } catch (err) {
-      console.error('Failed to load stats:', err)
     }
   }
 
@@ -281,36 +229,27 @@ export default function AdminDashboard() {
       category: symptomForm.category || 'General',
       cause: symptomForm.cause || 'Unknown',
       remedy: symptomForm.remedy,
-      safety_flags: symptomForm.safety_flags.split(',').map(s => s.trim()).filter(Boolean),
+      safety_flags: symptomForm.safety_flags.split(',').map((s: string) => s.trim()).filter(Boolean),
       created_at: new Date().toISOString(),
     }
 
     try {
       if (editingSymptom) {
-        const { error } = await supabase
-          .from('symptoms_database')
-          .update(newSymptom)
-          .eq('id', editingSymptom.id)
-        if (!error) {
-          setSymptoms(prev => prev.map(s => s.id === editingSymptom.id ? newSymptom : s))
-          toast.success('Symptom updated!')
-        }
+        await supabase.from('symptoms_database').update(newSymptom).eq('id', editingSymptom.id)
+        setSymptoms(prev => prev.map(s => s.id === editingSymptom.id ? newSymptom : s))
+        toast.success('Symptom updated!')
       } else {
-        const { error } = await supabase
-          .from('symptoms_database')
-          .insert([newSymptom])
-        if (!error) {
-          setSymptoms(prev => [newSymptom, ...prev])
-          toast.success('Symptom added!')
-        }
+        await supabase.from('symptoms_database').insert([newSymptom])
+        setSymptoms(prev => [newSymptom, ...prev])
+        toast.success('Symptom added!')
       }
     } catch {
-      toast.error('Database error - saved locally')
       if (editingSymptom) {
         setSymptoms(prev => prev.map(s => s.id === editingSymptom.id ? newSymptom : s))
       } else {
         setSymptoms(prev => [newSymptom, ...prev])
       }
+      toast.success('Saved locally')
     }
 
     setShowSymptomForm(false)
@@ -321,7 +260,7 @@ export default function AdminDashboard() {
   const deleteSymptom = async (id: string) => {
     if (!confirm('Delete this symptom?')) return
     try {
-      await supabase.from('symptoms_database').delete().eq('id', id')
+      await supabase.from('symptoms_database').delete().eq('id', id)
       setSymptoms(prev => prev.filter(s => s.id !== id))
       toast.success('Symptom deleted')
     } catch {
@@ -342,29 +281,26 @@ export default function AdminDashboard() {
     setShowSymptomForm(true)
   }
 
-  const voiceRatio = textCount + voiceCount > 0 ? Math.round((voiceCount / (textCount + voiceCount)) * 100) : 0
-
   if (!mounted) return null
 
   const navItems: { id: AdminTab; label: string; icon: string }[] = [
-    { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'symptoms', label: 'Symptom DB', icon: '🌿' },
-    { id: 'ai-logs', label: 'AI Logs', icon: '🤖' },
-    { id: 'users', label: 'Users', icon: '👥' },
-    { id: 'emergency', label: 'Emergency', icon: '🚨' },
-    { id: 'analytics', label: 'Analytics', icon: '📈' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'overview', label: 'Overview', icon: 'D' },
+    { id: 'symptoms', label: 'Symptom DB', icon: 'S' },
+    { id: 'ai-logs', label: 'AI Logs', icon: 'A' },
+    { id: 'users', label: 'Users', icon: 'U' },
+    { id: 'emergency', label: 'Emergency', icon: 'E' },
+    { id: 'analytics', label: 'Analytics', icon: 'G' },
+    { id: 'settings', label: 'Settings', icon: 'T' },
   ]
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex">
       <Toaster position="top-right" />
 
-      {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#111111] border-r border-[#1a1a1a] flex flex-col transition-all duration-300 fixed h-full z-20`}>
         <div className="p-4 border-b border-[#1a1a1a]">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🌿</span>
+            <span className="text-2xl">H</span>
             {sidebarOpen && (
               <div>
                 <div className="font-bold text-sm">HomeCareAI</div>
@@ -396,14 +332,12 @@ export default function AdminDashboard() {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:bg-[#1a1a1a] text-sm"
           >
-            {sidebarOpen ? '← Collapse' : '→'}
+            {sidebarOpen ? '< Collapse' : '>'}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className={`flex-1 ${sidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300`}>
-        {/* Top Bar */}
         <header className="sticky top-0 z-10 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-[#1a1a1a] px-6 py-3">
           <div className="flex items-center justify-between">
             <div>
@@ -422,7 +356,6 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -431,14 +364,13 @@ export default function AdminDashboard() {
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 className="text-4xl mb-4"
               >
-                🌿
+                H
               </motion.div>
               <p className="text-gray-400">Loading live data...</p>
             </div>
           </div>
         )}
 
-        {/* Content Area */}
         {!loading && (
           <div className="p-6">
             <AnimatePresence mode="wait">
@@ -450,29 +382,26 @@ export default function AdminDashboard() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-6"
                 >
-                  {/* Real Metric Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">👥</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
-                          {totalUsers > 0 ? '+' + Math.min(totalUsers, 100) + '%' : '0%'}
-                        </span>
+                        <span className="text-2xl">U</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Total</span>
                       </div>
                       <div className="text-2xl font-bold">{totalUsers}</div>
-                      <div className="text-xs text-gray-500">Total Registered Users</div>
+                      <div className="text-xs text-gray-500">Registered Users</div>
                     </div>
                     <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">🟢</span>
+                        <span className="text-2xl">A</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">Today</span>
                       </div>
                       <div className="text-2xl font-bold">{activeToday}</div>
-                      <div className="text-xs text-gray-500">Active Users Today</div>
+                      <div className="text-xs text-gray-500">Active Today</div>
                     </div>
                     <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">💬</span>
+                        <span className="text-2xl">Q</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">Today</span>
                       </div>
                       <div className="text-2xl font-bold">{queriesToday}</div>
@@ -480,7 +409,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-2xl">🚨</span>
+                        <span className="text-2xl">!</span>
                         {sosCount > 0 ? (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 animate-pulse">ALERT</span>
                         ) : (
@@ -492,7 +421,6 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Real Users List */}
                   <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-4">
                     <h3 className="text-sm font-semibold mb-4">Recent Users ({users.length})</h3>
                     {users.length === 0 ? (
@@ -539,7 +467,6 @@ export default function AdminDashboard() {
                     </button>
                   </div>
 
-                  {/* Symptom Form Modal */}
                   <AnimatePresence>
                     {showSymptomForm && (
                       <motion.div
@@ -568,7 +495,7 @@ export default function AdminDashboard() {
                               type="text"
                               value={symptomForm.category}
                               onChange={(e) => setSymptomForm({ ...symptomForm, category: e.target.value })}
-                              placeholder="Category (e.g., Pain, Digestive)"
+                              placeholder="Category"
                               className="w-full px-4 py-2 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm outline-none focus:border-emerald-500"
                             />
                             <input
@@ -586,13 +513,6 @@ export default function AdminDashboard() {
                               className="w-full px-4 py-2 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm outline-none resize-none focus:border-emerald-500"
                               required
                             />
-                            <input
-                              type="text"
-                              value={symptomForm.safety_flags}
-                              onChange={(e) => setSymptomForm({ ...symptomForm, safety_flags: e.target.value })}
-                              placeholder="Safety Flags (comma separated)"
-                              className="w-full px-4 py-2 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm outline-none focus:border-emerald-500"
-                            />
                             <div className="flex gap-3">
                               <button type="button" onClick={() => setShowSymptomForm(false)} className="flex-1 py-2 rounded-lg bg-[#1a1a1a] text-gray-400 text-sm">Cancel</button>
                               <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-medium">{editingSymptom ? 'Update' : 'Add'}</button>
@@ -603,7 +523,6 @@ export default function AdminDashboard() {
                     )}
                   </AnimatePresence>
 
-                  {/* Symptoms Table */}
                   <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl overflow-hidden">
                     {symptoms.length === 0 ? (
                       <div className="p-8 text-center">
@@ -652,7 +571,7 @@ export default function AdminDashboard() {
                   <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl overflow-hidden">
                     {chatLogs.length === 0 ? (
                       <div className="p-8 text-center">
-                        <p className="text-gray-500">No chat logs found. Users haven't chatted yet.</p>
+                        <p className="text-gray-500">No chat logs found. Users have not chatted yet.</p>
                       </div>
                     ) : (
                       <table className="w-full text-sm">
@@ -736,10 +655,10 @@ export default function AdminDashboard() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-4"
                 >
-                  <h2 className="text-lg font-bold">Emergency & SOS Alerts ({sosAlerts.length})</h2>
+                  <h2 className="text-lg font-bold">Emergency and SOS Alerts ({sosAlerts.length})</h2>
                   {sosAlerts.length === 0 ? (
                     <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-8 text-center">
-                      <div className="text-4xl mb-3">✅</div>
+                      <div className="text-4xl mb-3">OK</div>
                       <p className="text-gray-400">No emergency alerts. All clear!</p>
                     </div>
                   ) : (
@@ -748,8 +667,8 @@ export default function AdminDashboard() {
                         <div key={alert.id} className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="font-medium text-red-400">🚨 Emergency Alert</div>
-                              <div className="text-sm text-gray-400">User: {alert.user_id.substring(0, 8)}... · {new Date(alert.created_at).toLocaleString()}</div>
+                              <div className="font-medium text-red-400">Emergency Alert</div>
+                              <div className="text-sm text-gray-400">User: {alert.user_id.substring(0, 8)}... at {new Date(alert.created_at).toLocaleString()}</div>
                             </div>
                             <button className="px-3 py-1 rounded-lg bg-emerald-500 text-white text-xs">Review</button>
                           </div>
@@ -768,7 +687,7 @@ export default function AdminDashboard() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-4"
                 >
-                  <h2 className="text-lg font-bold">Analytics & Insights</h2>
+                  <h2 className="text-lg font-bold">Analytics and Insights</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-4">
                       <h3 className="text-sm font-semibold mb-4">User Growth</h3>
@@ -776,7 +695,7 @@ export default function AdminDashboard() {
                       <p className="text-xs text-gray-500">Total registered users</p>
                     </div>
                     <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-4">
-                      <h3 className="text-sm font-semibold mb-4">Today's Activity</h3>
+                      <h3 className="text-sm font-semibold mb-4">Today Activity</h3>
                       <div className="text-3xl font-bold text-blue-400">{queriesToday}</div>
                       <p className="text-xs text-gray-500">Queries processed today</p>
                     </div>
