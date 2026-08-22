@@ -5,6 +5,7 @@ from routes.chat import router as chat_router
 from routes.push import router as push_router
 from routes.stream import router as stream_router
 from routes.auth_webhook import router as auth_webhook_router
+from routes.admin import router as admin_router
 import time
 
 app = FastAPI(
@@ -69,6 +70,7 @@ app.include_router(chat_router, prefix="/api")
 app.include_router(push_router, prefix="/api/push")
 app.include_router(stream_router, prefix="/api")
 app.include_router(auth_webhook_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 @app.get("/")
 def root():

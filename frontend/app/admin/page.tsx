@@ -86,31 +86,32 @@ export default function AdminDashboard() {
 
   const loadUsers = async () => {
     try {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const response = await fetch('/api/admin/users')
+      const data = await response.json()
 
-      if (error || !profiles) {
+      if (data.success && data.users) {
+        const userEntries: UserEntry[] = data.users.map((u: any) => ({
+          id: u.id,
+          email: u.email || 'No email',
+          full_name: u.full_name || 'Unknown',
+          created_at: u.created_at,
+          last_sign_in: u.last_sign_in || null,
+        }))
+
+        setUsers(userEntries)
+        setTotalUsers(data.total || userEntries.length)
+
+        const today = new Date().toISOString().split('T')[0]
+        const active = userEntries.filter((u: UserEntry) => u.last_sign_in?.startsWith(today)).length
+        setActiveToday(active)
+      } else {
         setTotalUsers(0)
-        return
+        setActiveToday(0)
       }
-
-      const userEntries: UserEntry[] = profiles.map((p: any) => ({
-        id: p.id,
-        email: p.email || 'No email',
-        full_name: p.full_name || 'Unknown',
-        created_at: p.created_at,
-        last_sign_in: p.last_sign_in_at || null,
-      }))
-      setUsers(userEntries)
-      setTotalUsers(userEntries.length)
-
-      const today = new Date().toISOString().split('T')[0]
-      const active = profiles.filter((p: any) => p.last_sign_in_at?.startsWith(today)).length
-      setActiveToday(active)
     } catch (err) {
       console.error('Failed to load users:', err)
+      setTotalUsers(0)
+      setActiveToday(0)
     }
   }
 
@@ -345,6 +346,13 @@ export default function AdminDashboard() {
               <p className="text-xs text-gray-500">Live data from database</p>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={loadAllData}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span className="text-xs">Refresh</span>
+              </button>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span className="text-xs text-emerald-400">Live</span>
@@ -627,6 +635,7 @@ export default function AdminDashboard() {
                             <th className="text-left p-3 text-gray-400">Email</th>
                             <th className="text-left p-3 text-gray-400">Joined</th>
                             <th className="text-left p-3 text-gray-400">Last Sign In</th>
+                            <th className="text-left p-3 text-gray-400">Status</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -637,6 +646,11 @@ export default function AdminDashboard() {
                               <td className="p-3 text-gray-400 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
                               <td className="p-3 text-gray-400 text-xs">
                                 {u.last_sign_in ? new Date(u.last_sign_in).toLocaleDateString() : 'Never'}
+                              </td>
+                              <td className="p-3">
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${u.last_sign_in ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                  {u.last_sign_in ? 'Active' : 'Pending'}
+                                </span>
                               </td>
                             </tr>
                           ))}
