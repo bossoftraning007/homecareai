@@ -104,7 +104,7 @@ export default function HomePage() {
   if (!mounted) return null
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${isDark
+    <div className={`min-h-screen relative overflow-hidden smooth-scroll ${isDark
       ? 'bg-gradient-to-br from-gray-900 via-emerald-950 to-green-950'
       : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'
       }`}>
@@ -126,9 +126,9 @@ export default function HomePage() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25 }}
-              className={`fixed top-0 left-0 h-full w-80 z-50 shadow-2xl overflow-y-auto ${isDark ? 'bg-gray-900' : 'bg-white'}`}
+              className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] z-50 shadow-2xl overflow-y-auto safe-bottom ${isDark ? 'bg-gray-900' : 'bg-white'}`}
             >
-              <div className={`p-6 border-b ${isDark ? 'border-emerald-900' : 'border-emerald-100'}`}>
+              <div className={`p-6 border-b safe-top ${isDark ? 'border-emerald-900' : 'border-emerald-100'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-3xl">🌿</span>
@@ -215,12 +215,12 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* Top Navigation */}
-      <nav className={`sticky top-0 z-30 backdrop-blur-xl border-b ${isDark ? 'bg-gray-900/70 border-emerald-900' : 'bg-white/70 border-emerald-100'}`}>
+      <nav className={`sticky top-0 z-30 backdrop-blur-xl border-b safe-top ${isDark ? 'bg-gray-900/70 border-emerald-900' : 'bg-white/70 border-emerald-100'}`}>
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-emerald-50 text-emerald-800'}`}
+              className={`p-3 rounded-lg transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-emerald-50 text-emerald-800'}`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -237,16 +237,16 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className={`p-2 rounded-lg transition-all ${isDark ? 'bg-emerald-900/30 text-yellow-300 hover:bg-emerald-900/50' : 'bg-emerald-50 text-gray-700 hover:bg-emerald-100'}`}
+              className={`p-3 rounded-lg transition-all ${isDark ? 'bg-emerald-900/30 text-yellow-300 hover:bg-emerald-900/50' : 'bg-emerald-50 text-gray-700 hover:bg-emerald-100'}`}
             >
               {isDark ? '☀️' : '🌙'}
             </button>
             {user ? (
               <Link
                 href="/profile"
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'bg-emerald-900/30 text-emerald-200' : 'bg-emerald-50 text-emerald-800'}`}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium ${isDark ? 'bg-emerald-900/30 text-emerald-200' : 'bg-emerald-50 text-emerald-800'}`}
               >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
                   {displayName?.charAt(0).toUpperCase()}
                 </div>
                 <span className="hidden sm:inline">{displayName}</span>
@@ -254,7 +254,7 @@ export default function HomePage() {
             ) : (
               <Link
                 href="/login"
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/50 transition-all"
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-3 rounded-lg text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/50 transition-all"
               >
                 🔐 Login
               </Link>

@@ -903,7 +903,7 @@ export default function ChatPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={startVoiceInput}
-            className={`w-10 h-10 rounded-full flex items-center justify-center
+            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center
                         transition-all duration-300 flex-shrink-0 text-lg
                         ${isListening
                           ? 'bg-red-500/20 text-red-400 animate-pulse'
@@ -921,7 +921,7 @@ export default function ChatPage() {
             onChange={e => setInput(e.target.value)}
             placeholder={t.placeholder}
             disabled={loading}
-            className={`flex-1 bg-transparent text-sm outline-none disabled:opacity-50
+            className={`flex-1 bg-transparent text-sm outline-none disabled:opacity-50 min-h-[44px]
                        ${isDark
                          ? 'text-emerald-100 placeholder:text-emerald-300/50'
                          : 'text-gray-900 placeholder:text-gray-400'}`}
@@ -932,7 +932,7 @@ export default function ChatPage() {
             whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={!input.trim() || loading}
-            className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300
+            className={`px-5 py-3 min-h-[44px] rounded-full text-sm font-bold transition-all duration-300
                         ${input.trim() && !loading
                           ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/50'
                           : isDark
