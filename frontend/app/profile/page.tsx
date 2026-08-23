@@ -61,17 +61,17 @@ export default function ProfilePage() {
     avoidGluten: false,
   })
 
-  const [emergencyContacts] = useState([
-    { id: '1', name: 'Rahul Kumar', phone: '+91 98765 43210', relation: 'Son' },
-    { id: '2', name: 'Priya Sharma', phone: '+91 87654 32109', relation: 'Daughter' },
-  ])
-
-  const [medicalId] = useState({
-    bloodGroup: 'B+',
-    allergies: 'Penicillin, Peanuts',
-    conditions: 'None',
-    emergencyNote: 'No known critical conditions',
+  const [emergencyContacts, setEmergencyContacts] = useState<any[]>([])
+  const [medicalId, setMedicalId] = useState({
+    bloodGroup: '',
+    allergies: '',
+    conditions: '',
+    emergencyNote: '',
   })
+  const [showContactForm, setShowContactForm] = useState(false)
+  const [editingContact, setEditingContact] = useState<any>(null)
+  const [contactForm, setContactForm] = useState({ name: '', phone: '', relation: '' })
+  const [showMedicalForm, setShowMedicalForm] = useState(false)
 
   const [savedRemedies] = useState([
     { id: '1', name: 'Honey Lemon Tea', tags: ['Cold', 'Immunity'], icon: '🍯' },
@@ -94,6 +94,7 @@ export default function ProfilePage() {
     } else if (user) {
       loadStats()
       loadPreferences()
+      loadEmergencyData()
     }
   }, [user, loading, router])
 
@@ -113,7 +114,7 @@ export default function ProfilePage() {
       trackerEntries: wellness.count || 0,
       reminders: reminders.count || 0,
       streak: 7,
-      emergencyContacts: 2,
+      emergencyContacts: emergencyContacts.length,
     })
   }
 
@@ -123,6 +124,113 @@ export default function ProfilePage() {
       try {
         setPreferences(JSON.parse(saved))
       } catch {}
+    }
+  }
+
+  const loadEmergencyData = async () => {
+    if (!user) return
+    const { data: contacts } = await supabase
+      .from('emergency_contacts')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+
+    if (contacts && contacts.length > 0) {
+      setEmergencyContacts(contacts)
+    }
+
+    const { data: medical } = await supabase
+      .from('medical_ids')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (medical) {
+      setMedicalId({
+        bloodGroup: medical.blood_group || '',
+        allergies: medical.allergies || '',
+        conditions: medical.conditions || '',
+        emergencyNote: medical.emergency_note || '',
+      })
+    }
+  }
+
+  const saveContact = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!contactForm.name.trim() || !contactForm.phone.trim()) {
+      toast.error('Name and phone are required!')
+      return
+    }
+
+    if (!user) {
+      toast.error('Please login first')
+      return
+    }
+
+    try {
+      if (editingContact) {
+        const { error } = await supabase
+          .from('emergency_contacts')
+          .update({ name: contactForm.name, phone: contactForm.phone, relation: contactForm.relation })
+          .eq('id', editingContact.id)
+
+        if (!error) {
+          setEmergencyContacts(prev => prev.map(c => c.id === editingContact.id ? { ...c, ...contactForm } : c))
+          toast.success('Contact updated!')
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('emergency_contacts')
+          .insert([{ user_id: user.id, name: contactForm.name, phone: contactForm.phone, relation: contactForm.relation }])
+          .select()
+          .single()
+
+        if (!error && data) {
+          setEmergencyContacts(prev => [...prev, data])
+          toast.success('Contact added!')
+        }
+      }
+    } catch {
+      toast.error('Failed to save contact')
+    }
+
+    setShowContactForm(false)
+    setEditingContact(null)
+    setContactForm({ name: '', phone: '', relation: '' })
+  }
+
+  const deleteContact = async (id: string) => {
+    if (!confirm('Delete this contact?')) return
+    try {
+      await supabase.from('emergency_contacts').delete().eq('id', id)
+      setEmergencyContacts(prev => prev.filter(c => c.id !== id))
+      toast.success('Contact deleted')
+    } catch {
+      toast.error('Failed to delete')
+    }
+  }
+
+  const saveMedicalId = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    try {
+      const { error } = await supabase
+        .from('medical_ids')
+        .upsert([{
+          user_id: user.id,
+          blood_group: medicalId.bloodGroup,
+          allergies: medicalId.allergies,
+          conditions: medicalId.conditions,
+          emergency_note: medicalId.emergencyNote,
+        }])
+
+      if (!error) {
+        toast.success('Medical ID saved!')
+        setShowMedicalForm(false)
+      }
+    } catch {
+      toast.error('Failed to save')
     }
   }
 
@@ -453,57 +561,265 @@ export default function ProfilePage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
+              {/* Contact Form Modal */}
+              <AnimatePresence>
+                {showContactForm && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0.9 }}
+                      className={`max-w-sm w-full rounded-2xl p-6 shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+                    >
+                      <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {editingContact ? 'Edit Contact' : 'Add Emergency Contact'}
+                      </h3>
+                      <form onSubmit={saveContact} className="space-y-3">
+                        <input
+                          type="text"
+                          value={contactForm.name}
+                          onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                          placeholder="Full Name *"
+                          className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-none ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder:text-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
+                          required
+                        />
+                        <input
+                          type="tel"
+                          value={contactForm.phone}
+                          onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                          placeholder="Phone Number * (e.g., +91 98765 43210)"
+                          className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-none ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder:text-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
+                          required
+                        />
+                        <input
+                          type="text"
+                          value={contactForm.relation}
+                          onChange={(e) => setContactForm({ ...contactForm, relation: e.target.value })}
+                          placeholder="Relation (e.g., Son, Daughter, Friend)"
+                          className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-none ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder:text-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
+                        />
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => { setShowContactForm(false); setEditingContact(null); setContactForm({ name: '', phone: '', relation: '' }) }}
+                            className={`flex-1 py-2.5 rounded-xl font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600"
+                          >
+                            {editingContact ? 'Update' : 'Add Contact'}
+                          </button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Emergency Contacts */}
               <div className={`backdrop-blur-sm border rounded-2xl p-4 shadow-md ${isDark ? 'bg-gray-800/70 border-emerald-800' : 'bg-white/70 border-green-200'}`}
               >
-                <h3 className={`text-sm font-bold mb-3 ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
-                  Emergency Contacts (ICE)
-                </h3>
-                <div className="space-y-3">
-                  {emergencyContacts.map((contact, i) => (
-                    <motion.div
-                      key={contact.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className={`flex items-center justify-between p-3 rounded-xl border ${isDark ? 'bg-gray-900/50 border-emerald-900' : 'bg-white/50 border-green-100'}`}
-                    >
-                      <div>
-                        <div className={`font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>{contact.name}</div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-green-600/70'}`}>{contact.relation} • {contact.phone}</div>
-                      </div>
-                      <motion.a
-                        href={`tel:${contact.phone}`}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white shadow-md"
-                      >
-                        📞
-                      </motion.a>
-                    </motion.div>
-                  ))}
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-bold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
+                    Emergency Contacts ({emergencyContacts.length})
+                  </h3>
+                  <button
+                    onClick={() => { setEditingContact(null); setContactForm({ name: '', phone: '', relation: '' }); setShowContactForm(true) }}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-medium hover:bg-emerald-600"
+                  >
+                    + Add Contact
+                  </button>
                 </div>
+
+                {emergencyContacts.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="text-3xl mb-2">📞</div>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No emergency contacts yet</p>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Add family or friends you want notified in emergencies</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {emergencyContacts.map((contact, i) => (
+                      <motion.div
+                        key={contact.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className={`flex items-center justify-between p-3 rounded-xl border ${isDark ? 'bg-gray-900/50 border-emerald-900' : 'bg-white/50 border-green-100'}`}
+                      >
+                        <div className="flex-1">
+                          <div className={`font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>{contact.name}</div>
+                          <div className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-green-600/70'}`}>
+                            {contact.relation && `${contact.relation} | `}{contact.phone}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <motion.a
+                            href={`tel:${contact.phone}`}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center text-white shadow-md"
+                          >
+                            📞
+                          </motion.a>
+                          <button
+                            onClick={() => { setEditingContact(contact); setContactForm({ name: contact.name, phone: contact.phone, relation: contact.relation || '' }); setShowContactForm(true) }}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'}`}
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => deleteContact(contact.id)}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center ${isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-500'}`}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Medical ID Form Modal */}
+              <AnimatePresence>
+                {showMedicalForm && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0.9 }}
+                      className={`max-w-sm w-full rounded-2xl p-6 shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+                    >
+                      <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Edit Medical ID
+                      </h3>
+                      <form onSubmit={saveMedicalId} className="space-y-3">
+                        <div>
+                          <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Blood Group</label>
+                          <select
+                            value={medicalId.bloodGroup}
+                            onChange={(e) => setMedicalId({ ...medicalId, bloodGroup: e.target.value })}
+                            className={`w-full mt-1 px-4 py-2.5 rounded-xl border text-sm outline-none ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                          >
+                            <option value="">Select</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Allergies (comma separated)</label>
+                          <input
+                            type="text"
+                            value={medicalId.allergies}
+                            onChange={(e) => setMedicalId({ ...medicalId, allergies: e.target.value })}
+                            placeholder="e.g., Penicillin, Peanuts"
+                            className={`w-full mt-1 px-4 py-2.5 rounded-xl border text-sm outline-none ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder:text-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
+                          />
+                        </div>
+                        <div>
+                          <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Medical Conditions</label>
+                          <input
+                            type="text"
+                            value={medicalId.conditions}
+                            onChange={(e) => setMedicalId({ ...medicalId, conditions: e.target.value })}
+                            placeholder="e.g., Diabetes, Hypertension"
+                            className={`w-full mt-1 px-4 py-2.5 rounded-xl border text-sm outline-none ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder:text-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
+                          />
+                        </div>
+                        <div>
+                          <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Emergency Note</label>
+                          <textarea
+                            value={medicalId.emergencyNote}
+                            onChange={(e) => setMedicalId({ ...medicalId, emergencyNote: e.target.value })}
+                            placeholder="Any critical info for emergencies"
+                            rows={2}
+                            className={`w-full mt-1 px-4 py-2.5 rounded-xl border text-sm outline-none resize-none ${isDark ? 'bg-gray-900 border-gray-700 text-white placeholder:text-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'}`}
+                          />
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowMedicalForm(false)}
+                            className={`flex-1 py-2.5 rounded-xl font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600"
+                          >
+                            Save Medical ID
+                          </button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Medical ID */}
               <div className={`backdrop-blur-sm border rounded-2xl p-4 shadow-md ${isDark ? 'bg-gray-800/70 border-emerald-800' : 'bg-white/70 border-green-200'}`}
               >
-                <h3 className={`text-sm font-bold mb-3 ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
-                  Medical ID Snapshot
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-bold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
+                    Medical ID Snapshot
+                  </h3>
+                  <button
+                    onClick={() => setShowMedicalForm(true)}
+                    className="px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-medium hover:bg-blue-600"
+                  >
+                    ✏️ Edit
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: 'Blood Group', value: medicalId.bloodGroup, icon: '🩸' },
-                    { label: 'Allergies', value: medicalId.allergies, icon: '⚠️' },
-                    { label: 'Conditions', value: medicalId.conditions, icon: '🏥' },
-                    { label: 'Emergency Note', value: medicalId.emergencyNote, icon: '📋' },
-                  ].map((item, i) => (
-                    <div key={i} className={`p-3 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-emerald-50/50'}`}>
-                      <div className="text-lg">{item.icon}</div>
-                      <div className={`text-xs mt-1 ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>{item.label}</div>
-                      <div className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>{item.value}</div>
+                  <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-emerald-50/50'}`}>
+                    <div className="text-lg">🩸</div>
+                    <div className={`text-xs mt-1 ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>Blood Group</div>
+                    <div className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
+                      {medicalId.bloodGroup || 'Not set'}
                     </div>
-                  ))}
+                  </div>
+                  <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-emerald-50/50'}`}>
+                    <div className="text-lg">⚠️</div>
+                    <div className={`text-xs mt-1 ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>Allergies</div>
+                    <div className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
+                      {medicalId.allergies || 'None listed'}
+                    </div>
+                  </div>
+                  <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-emerald-50/50'}`}>
+                    <div className="text-lg">🏥</div>
+                    <div className={`text-xs mt-1 ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>Conditions</div>
+                    <div className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
+                      {medicalId.conditions || 'None listed'}
+                    </div>
+                  </div>
+                  <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-900/50' : 'bg-emerald-50/50'}`}>
+                    <div className="text-lg">📋</div>
+                    <div className={`text-xs mt-1 ${isDark ? 'text-emerald-400/60' : 'text-green-600/60'}`}>Emergency Note</div>
+                    <div className={`text-sm font-semibold ${isDark ? 'text-emerald-200' : 'text-green-800'}`}>
+                      {medicalId.emergencyNote || 'None'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
