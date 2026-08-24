@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/lib/useAuth'
+import { NotificationBell } from '../components/Notifications'
 
 const symptoms = [
   { icon: '🤧', label: 'Cold', value: 'I have a cold and blocked nose' },
@@ -235,6 +236,7 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <button
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
               className={`p-3 rounded-lg transition-all ${isDark ? 'bg-emerald-900/30 text-yellow-300 hover:bg-emerald-900/50' : 'bg-emerald-50 text-gray-700 hover:bg-emerald-100'}`}

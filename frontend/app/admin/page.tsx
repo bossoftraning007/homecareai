@@ -5,7 +5,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
-type AdminTab = 'overview' | 'symptoms' | 'ai-logs' | 'users' | 'emergency' | 'analytics' | 'settings'
+type AdminTab = 'overview' | 'symptoms' | 'ai-logs' | 'users' | 'emergency' | 'broadcast' | 'analytics' | 'settings'
 
 type SymptomEntry = {
   id: string
@@ -68,6 +68,12 @@ export default function AdminDashboard() {
     safety_flags: '',
   })
 
+  const [broadcastTitle, setBroadcastTitle] = useState('')
+  const [broadcastBody, setBroadcastBody] = useState('')
+  const [broadcastUrl, setBroadcastUrl] = useState('')
+  const [broadcastSending, setBroadcastSending] = useState(false)
+  const [broadcasts, setBroadcasts] = useState<any[]>([])
+
   useEffect(() => {
     setMounted(true)
     loadAllData()
@@ -80,6 +86,7 @@ export default function AdminDashboard() {
       loadSymptoms(),
       loadChatLogs(),
       loadSOSAlerts(),
+      loadBroadcasts(),
     ])
     setLoading(false)
   }
@@ -217,6 +224,64 @@ export default function AdminDashboard() {
     }
   }
 
+  const loadBroadcasts = async () => {
+    try {
+      const { data } = await supabase
+        .from('broadcast_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10)
+      setBroadcasts(data || [])
+    } catch (err) {
+      console.error('Failed to load broadcasts:', err)
+    }
+  }
+
+  const sendBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastBody.trim()) {
+      toast.error('Title and message are required!')
+      return
+    }
+    setBroadcastSending(true)
+    try {
+      const { error } = await supabase.from('notifications').insert({
+        user_id: '00000000-0000-0000-0000-000000000000',
+        type: 'broadcast',
+        title: broadcastTitle,
+        body: broadcastBody,
+        icon: 'B',
+        action_url: broadcastUrl || null,
+        priority: 'normal',
+      })
+
+      // Use the API for actual broadcast to all users
+      const response = await fetch('/api/notifications/admin/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: broadcastTitle,
+          body: broadcastBody,
+          action_url: broadcastUrl || null,
+        }),
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        toast.success(`Broadcast sent to ${result.target_count} users!`)
+        setBroadcastTitle('')
+        setBroadcastBody('')
+        setBroadcastUrl('')
+        loadBroadcasts()
+      } else {
+        toast.error(result.detail || 'Failed to send broadcast')
+      }
+    } catch (err) {
+      console.error('Failed to send broadcast:', err)
+      toast.error('Failed to send broadcast')
+    }
+    setBroadcastSending(false)
+  }
+
   const handleAddSymptom = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!symptomForm.name || !symptomForm.remedy) {
@@ -290,6 +355,7 @@ export default function AdminDashboard() {
     { id: 'ai-logs', label: 'AI Logs', icon: 'A' },
     { id: 'users', label: 'Users', icon: 'U' },
     { id: 'emergency', label: 'Emergency', icon: 'E' },
+    { id: 'broadcast', label: 'Broadcast', icon: 'B' },
     { id: 'analytics', label: 'Analytics', icon: 'G' },
     { id: 'settings', label: 'Settings', icon: 'T' },
   ]
@@ -690,6 +756,83 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   )}
+                </motion.div>
+              )}
+
+              {activeTab === 'broadcast' && (
+                <motion.div
+                  key="broadcast"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-4"
+                >
+                  <h2 className="text-lg font-bold">Push Broadcast</h2>
+                  <p className="text-sm text-gray-400">Send announcement notifications to all users</p>
+
+                  {/* Broadcast Form */}
+                  <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5 space-y-4">
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Title</label>
+                      <input
+                        type="text"
+                        value={broadcastTitle}
+                        onChange={(e) => setBroadcastTitle(e.target.value)}
+                        placeholder="e.g., New remedies added!"
+                        className="w-full px-4 py-3 rounded-lg bg-[#0a0a0a] border border-[#2a2a2a] text-white text-sm outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Message</label>
+                      <textarea
+                        value={broadcastBody}
+                        onChange={(e) => setBroadcastBody(e.target.value)}
+                        placeholder="e.g., We just added 20 new natural remedies..."
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-lg bg-[#0a0a0a] border border-[#2a2a2a] text-white text-sm outline-none focus:border-emerald-500 resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Action URL (optional)</label>
+                      <input
+                        type="text"
+                        value={broadcastUrl}
+                        onChange={(e) => setBroadcastUrl(e.target.value)}
+                        placeholder="e.g., /home or /chat"
+                        className="w-full px-4 py-3 rounded-lg bg-[#0a0a0a] border border-[#2a2a2a] text-white text-sm outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <button
+                      onClick={sendBroadcast}
+                      disabled={!broadcastTitle.trim() || !broadcastBody.trim() || broadcastSending}
+                      className="w-full py-3 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {broadcastSending ? 'Sending...' : `Send to ${totalUsers} users`}
+                    </button>
+                  </div>
+
+                  {/* Broadcast History */}
+                  <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5">
+                    <h3 className="text-sm font-semibold mb-4">Recent Broadcasts</h3>
+                    {broadcasts.length === 0 ? (
+                      <p className="text-sm text-gray-500">No broadcasts yet</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {broadcasts.map((b: any) => (
+                          <div key={b.id} className="flex items-center justify-between p-3 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a]">
+                            <div>
+                              <p className="text-sm font-medium">{b.title}</p>
+                              <p className="text-xs text-gray-500">{b.body?.substring(0, 60)}...</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-emerald-400">{b.delivered_count} delivered</p>
+                              <p className="text-xs text-gray-500">{new Date(b.created_at).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )}
 
