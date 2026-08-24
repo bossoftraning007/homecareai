@@ -93,10 +93,11 @@ export default function AdminDashboard() {
 
   const loadUsers = async () => {
     try {
+      // Try admin API first (requires service role key)
       const response = await fetch('/api/admin/users')
       const data = await response.json()
 
-      if (data.success && data.users) {
+      if (data.success && data.users && data.users.length > 0) {
         const userEntries: UserEntry[] = data.users.map((u: any) => ({
           id: u.id,
           email: u.email || 'No email',
@@ -112,11 +113,52 @@ export default function AdminDashboard() {
         const active = userEntries.filter((u: UserEntry) => u.last_sign_in?.startsWith(today)).length
         setActiveToday(active)
       } else {
+        // Fallback: load from profiles table
+        await loadUsersFromProfiles()
+      }
+    } catch (err) {
+      console.error('Failed to load users from admin API:', err)
+      // Fallback: load from profiles table
+      await loadUsersFromProfiles()
+    }
+  }
+
+  const loadUsersFromProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      if (error) {
+        console.error('Failed to load profiles:', error)
+        setTotalUsers(0)
+        setActiveToday(0)
+        return
+      }
+
+      if (data && data.length > 0) {
+        const userEntries: UserEntry[] = data.map((p: any) => ({
+          id: p.id,
+          email: p.email || 'No email',
+          full_name: p.full_name || 'Unknown',
+          created_at: p.created_at,
+          last_sign_in: p.last_sign_in || null,
+        }))
+
+        setUsers(userEntries)
+        setTotalUsers(userEntries.length)
+
+        const today = new Date().toISOString().split('T')[0]
+        const active = userEntries.filter((u: UserEntry) => u.last_sign_in?.startsWith(today)).length
+        setActiveToday(active)
+      } else {
         setTotalUsers(0)
         setActiveToday(0)
       }
     } catch (err) {
-      console.error('Failed to load users:', err)
+      console.error('Failed to load users from profiles:', err)
       setTotalUsers(0)
       setActiveToday(0)
     }
@@ -429,6 +471,20 @@ export default function AdminDashboard() {
             </div>
           </div>
         </header>
+
+        {/* Service Role Key Warning */}
+        <div className="mx-6 mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+          <div className="flex items-start gap-3">
+            <span className="text-yellow-500 text-xl">!</span>
+            <div>
+              <p className="text-sm font-semibold text-yellow-400">Admin User Data</p>
+              <p className="text-xs text-yellow-400/70 mt-1">
+                To see all registered users with emails, add <code className="bg-yellow-500/20 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> to Render environment variables.
+                Showing data from profiles table as fallback.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {loading && (
           <div className="flex items-center justify-center h-64">
