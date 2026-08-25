@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Request, HTTPException, Depends
 from services.auth_service import get_current_user
 from config.database import get_supabase
-from services.ai_service import AIService
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 
