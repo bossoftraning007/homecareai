@@ -473,17 +473,35 @@ export default function AdminDashboard() {
         </header>
 
         {/* Service Role Key Warning */}
-        <div className="mx-6 mt-4 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+        <div id="admin-warning" className="mx-6 mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
           <div className="flex items-start gap-3">
-            <span className="text-yellow-500 text-xl">!</span>
-            <div>
-              <p className="text-sm font-semibold text-yellow-400">Admin User Data</p>
-              <p className="text-xs text-yellow-400/70 mt-1">
-                {users.length > 0 && users[0]?.email === 'No email'
-                  ? 'Emails are missing. Run database/fix_profiles_complete.sql in Supabase to sync emails from auth users.'
-                  : 'Showing users from profiles table. Add SUPABASE_SERVICE_ROLE_KEY to Render for full auth data.'}
+            <span className="text-amber-500 text-xl">!</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-400">Limited User Data</p>
+              <p className="text-xs text-amber-400/70 mt-1">
+                Showing {users.length} user(s) from profiles table. To see all auth users with full details:
               </p>
+              <ol className="text-xs text-amber-400/70 mt-2 list-decimal list-inside space-y-1">
+                <li>Go to Supabase → Settings → API → Copy <code className="bg-amber-500/20 px-1 rounded">service_role</code> key</li>
+                <li>Go to Render → Backend → Environment → Add <code className="bg-amber-500/20 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code></li>
+                <li>Redeploy backend</li>
+              </ol>
+              <button
+                onClick={loadAllData}
+                className="mt-3 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/30 transition-colors"
+              >
+                Refresh Data
+              </button>
             </div>
+            <button
+              onClick={() => {
+                const el = document.getElementById('admin-warning')
+                if (el) el.style.display = 'none'
+              }}
+              className="text-amber-400/50 hover:text-amber-400"
+            >
+              Hide
+            </button>
           </div>
         </div>
 
