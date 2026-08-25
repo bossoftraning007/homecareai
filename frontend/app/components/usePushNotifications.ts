@@ -1,16 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useEffect, useState, useCallback } from 'react'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://homecareai-backend.onrender.com'
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 
 function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4)
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
-  const rawData = atob(base64)
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
   const outputArray = new Uint8Array(rawData.length)
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i)
@@ -18,66 +14,93 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray
 }
 
-export function usePushNotifications(userId: string | null) {
-  const [subscribed, setSubscribed] = useState(false)
+export function usePushNotifications() {
+  const [subscription, setSubscription] = useState<PushSubscription | null>(null)
+  const [isSupported, setIsSupported] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission>('default')
 
   useEffect(() => {
-    if (!userId) return
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.ready.then(reg => {
-        reg.pushManager.getSubscription().then(sub => {
-          setSubscribed(!!sub)
-        })
-      })
-    }
-    if ('Notification' in window) {
+      setIsSupported(true)
       setPermission(Notification.permission)
     }
-  }, [userId])
+  }, [])
 
-  const subscribe = async () => {
-    if (!userId) return false
-
-    if (!('serviceWorker' in navigator)) return false
-    if (permission !== 'granted') {
-      const result = await Notification.requestPermission()
-      setPermission(result)
-      if (result !== 'granted') return false
+  const subscribe = useCallback(async () => {
+    if (!isSupported || !VAPID_PUBLIC_KEY) {
+      console.log('Push not supported or VAPID key missing')
+      return null
     }
 
     try {
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.subscribe({
+      const registration = await navigator.serviceWorker.ready
+
+      // Check if already subscribed
+      let existingSub = await registration.pushManager.getSubscription()
+      if (existingSub) {
+        setSubscription(existingSub)
+        return existingSub
+      }
+
+      // Subscribe
+      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      const newSub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey,
       })
 
-      await axios.post(`${API_URL}/api/push/subscribe/${userId}`, {
-        endpoint: sub.endpoint,
-        keys: {
-          p256dh: sub.getKey('p256dh') ? btoa(String.fromCharCode(...Array.from(new Uint8Array(sub.getKey('p256dh') as ArrayBuffer)))) : '',
-          auth: sub.getKey('auth') ? btoa(String.fromCharCode(...Array.from(new Uint8Array(sub.getKey('auth') as ArrayBuffer)))) : '',
-        },
+      setSubscription(newSub)
+      setPermission('granted')
+
+      // Send subscription to backend
+      await fetch('/api/notifications/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSub.toJSON()),
       })
 
-      setSubscribed(true)
-      return true
+      return newSub
     } catch (err) {
-      console.error('Subscription failed:', err)
-      return false
+      console.error('Failed to subscribe to push:', err)
+      return null
     }
-  }
+  }, [isSupported])
 
-  const unsubscribe = async () => {
-    if (!('serviceWorker' in navigator)) return
-    const reg = await navigator.serviceWorker.ready
-    const sub = await reg.pushManager.getSubscription()
-    if (sub) {
-      await sub.unsubscribe()
-      setSubscribed(false)
+  const unsubscribe = useCallback(async () => {
+    if (!subscription) return
+
+    try {
+      await subscription.unsubscribe()
+      setSubscription(null)
+
+      // Notify backend
+      await fetch('/api/notifications/push/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      })
+    } catch (err) {
+      console.error('Failed to unsubscribe:', err)
     }
-  }
+  }, [subscription])
 
-  return { subscribed, permission, subscribe, unsubscribe }
+  const requestPermission = useCallback(async () => {
+    if (!('Notification' in window)) return 'denied'
+
+    const result = await Notification.requestPermission()
+    setPermission(result)
+    if (result === 'granted') {
+      await subscribe()
+    }
+    return result
+  }, [subscribe])
+
+  return {
+    isSupported,
+    permission,
+    subscription,
+    subscribe,
+    unsubscribe,
+    requestPermission,
+  }
 }

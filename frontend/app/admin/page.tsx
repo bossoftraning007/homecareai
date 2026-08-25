@@ -327,6 +327,22 @@ export default function AdminDashboard() {
         toast.error('Failed to send broadcast')
       } else {
         toast.success(`Broadcast sent to ${users.length} users!`)
+
+        // Send push notifications to subscribed users
+        try {
+          await fetch('/api/notifications/push/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: broadcastTitle,
+              body: broadcastBody,
+              url: broadcastUrl || '/notifications',
+            }),
+          })
+        } catch (pushErr) {
+          console.error('Push notification failed:', pushErr)
+        }
+
         setBroadcastTitle('')
         setBroadcastBody('')
         setBroadcastUrl('')

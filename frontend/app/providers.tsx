@@ -2,6 +2,7 @@
 import { ThemeProvider } from 'next-themes'
 import OfflineIndicator from './components/OfflineIndicator'
 import { useServiceWorker } from './components/useServiceWorker'
+import { PushNotificationManager } from './components/PushNotificationManager'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useServiceWorker()
@@ -13,6 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange={false}
     >
       <OfflineIndicator />
+      <PushNotificationManager />
       {children}
     </ThemeProvider>
   )
