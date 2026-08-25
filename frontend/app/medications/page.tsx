@@ -32,7 +32,7 @@ export default function MedicationsPage() {
   })
 
   const isDark = theme === 'dark'
-  const { subscribed, permission, subscribe } = usePushNotifications(user?.id ?? null)
+  const { permission, subscribe } = usePushNotifications()
 
   const loadFromLocal = () => {
     const saved = localStorage.getItem(MEDICATION_STORAGE_KEY)
