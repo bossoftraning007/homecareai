@@ -116,7 +116,8 @@ async def mark_all_as_read(current_user: dict = Depends(get_current_user)):
 
 @router.delete("/{notification_id}")
 async def delete_notification(
-    notification_id: str, current_user: dict = Depends(get_current_user):
+    notification_id: str, current_user: dict = Depends(get_current_user)
+):
     """Archive (soft delete) a notification."""
     try:
         supabase = get_supabase()
