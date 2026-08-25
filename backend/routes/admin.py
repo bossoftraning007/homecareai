@@ -4,9 +4,16 @@ import os
 
 router = APIRouter()
 
-supabase_url = os.getenv("SUPABASE_URL", "")
-supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-supabase_admin = create_client(supabase_url, supabase_service_key) if supabase_service_key else None
+supabase_url = os.environ.get("SUPABASE_URL", "")
+supabase_service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+
+# Only create client if both URL and key are provided
+supabase_admin = None
+if supabase_url and supabase_service_key:
+    try:
+        supabase_admin = create_client(supabase_url, supabase_service_key)
+    except Exception as e:
+        print(f"Warning: Failed to create Supabase admin client: {e}")
 
 
 @router.get("/admin/users")
