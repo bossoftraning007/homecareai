@@ -250,15 +250,11 @@ async def send_broadcast(
     try:
         supabase = get_supabase()
 
-        # Check admin
-        profile = (
-            supabase.table("profiles")
-            .select("is_admin")
-            .eq("id", current_user["id"])
-            .single()
-            .execute()
-        )
-        if not profile.data or not profile.data.get("is_admin"):
+        # Check admin using security definer function (bypasses RLS)
+        admin_check = supabase.rpc("check_is_admin", {"user_id": current_user["id"]}).execute()
+        is_admin = admin_check.data if admin_check.data is not None else False
+        
+        if not is_admin:
             raise HTTPException(status_code=403, detail="Admin access required")
 
         data = await request.json()
