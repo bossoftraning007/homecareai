@@ -72,6 +72,11 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
+  // Only cache GET requests
+  if (request.method !== 'GET') {
+    return
+  }
+
   // Never cache API responses - they contain sensitive health data
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(request))
@@ -96,7 +101,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request).then(response => {
       const cloned = response.clone()
-      if (response.status === 200) {
+      if (response.status === 200 && response.type === 'basic') {
         caches.open(CACHE_NAME).then(cache => cache.put(request, cloned))
       }
       return response

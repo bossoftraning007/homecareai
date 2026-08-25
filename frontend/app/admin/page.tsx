@@ -127,7 +127,7 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, email, full_name, created_at, last_sign_in, is_admin')
         .order('created_at', { ascending: false })
         .limit(100)
 
@@ -479,8 +479,9 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-semibold text-yellow-400">Admin User Data</p>
               <p className="text-xs text-yellow-400/70 mt-1">
-                To see all registered users with emails, add <code className="bg-yellow-500/20 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> to Render environment variables.
-                Showing data from profiles table as fallback.
+                {users.length > 0 && users[0]?.email === 'No email'
+                  ? 'Emails are missing. Run database/fix_profiles_complete.sql in Supabase to sync emails from auth users.'
+                  : 'Showing users from profiles table. Add SUPABASE_SERVICE_ROLE_KEY to Render for full auth data.'}
               </p>
             </div>
           </div>
