@@ -1,7 +1,9 @@
 -- Create tables for reminders and analytics
--- Run this in Supabase SQL Editor
+-- Run this in Supabase SQL Editor (run each section separately if needed)
 
--- Reminders table
+-- ============================================
+-- SECTION 1: Create Reminders Table
+-- ============================================
 CREATE TABLE IF NOT EXISTS reminders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -15,7 +17,21 @@ CREATE TABLE IF NOT EXISTS reminders (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Notification analytics table
+-- Enable RLS
+ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+DROP POLICY IF EXISTS "Users can manage own reminders" ON reminders;
+CREATE POLICY "Users can manage own reminders"
+  ON reminders FOR ALL
+  USING (auth.uid() = user_id);
+
+-- Index
+CREATE INDEX IF NOT EXISTS idx_reminders_user ON reminders(user_id, is_active);
+
+-- ============================================
+-- SECTION 2: Create Notification Analytics Table
+-- ============================================
 CREATE TABLE IF NOT EXISTS notification_analytics (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   date DATE NOT NULL UNIQUE,
@@ -31,33 +47,33 @@ CREATE TABLE IF NOT EXISTS notification_analytics (
 );
 
 -- Enable RLS
-ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_analytics ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
-CREATE POLICY "Users can manage own reminders"
-  ON reminders FOR ALL
-  USING (auth.uid() = user_id);
-
+DROP POLICY IF EXISTS "Admins can view analytics" ON notification_analytics;
 CREATE POLICY "Admins can view analytics"
   ON notification_analytics FOR SELECT
   USING (EXISTS (
     SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.is_admin = true
   ));
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_reminders_user ON reminders(user_id, is_active);
+-- Index
 CREATE INDEX IF NOT EXISTS idx_analytics_date ON notification_analytics(date DESC);
 
--- Insert default reminders for existing users
+-- ============================================
+-- SECTION 3: Insert Default Reminders (run after tables are created)
+-- ============================================
+-- Uncomment and run this section after the tables above are created:
+/*
 INSERT INTO reminders (user_id, type, title, message, scheduled_time)
 SELECT 
   p.id,
   'wellness',
-  '🧘 Wellness Check',
+  'Wellness Check',
   'How are you feeling today? Take a moment for your health.',
   '09:00'
 FROM profiles p
 WHERE NOT EXISTS (
   SELECT 1 FROM reminders r WHERE r.user_id = p.id AND r.type = 'wellness'
 );
+*/
