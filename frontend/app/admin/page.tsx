@@ -73,6 +73,7 @@ export default function AdminDashboard() {
   const [broadcastUrl, setBroadcastUrl] = useState('')
   const [broadcastSending, setBroadcastSending] = useState(false)
   const [broadcasts, setBroadcasts] = useState<any[]>([])
+  const [adminError, setAdminError] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -133,6 +134,7 @@ export default function AdminDashboard() {
 
       if (error) {
         console.error('Failed to load profiles:', error)
+        setAdminError(error.message)
         setTotalUsers(0)
         setActiveToday(0)
         return
@@ -149,6 +151,7 @@ export default function AdminDashboard() {
 
         setUsers(userEntries)
         setTotalUsers(userEntries.length)
+        setAdminError(null)
 
         const today = new Date().toISOString().split('T')[0]
         const active = userEntries.filter((u: UserEntry) => u.last_sign_in?.startsWith(today)).length
@@ -156,9 +159,11 @@ export default function AdminDashboard() {
       } else {
         setTotalUsers(0)
         setActiveToday(0)
+        setAdminError('profiles table is empty. Run database/fix_sync_users.sql in Supabase.')
       }
     } catch (err) {
       console.error('Failed to load users from profiles:', err)
+      setAdminError(String(err))
       setTotalUsers(0)
       setActiveToday(0)
     }
@@ -478,20 +483,35 @@ export default function AdminDashboard() {
             <span className="text-amber-500 text-xl">!</span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-amber-400">Limited User Data</p>
-              <p className="text-xs text-amber-400/70 mt-1">
-                Showing {users.length} user(s) from profiles table. To see all auth users with full details:
-              </p>
+              {adminError ? (
+                <p className="text-xs text-red-400 mt-1">
+                  Error: {adminError}
+                </p>
+              ) : (
+                <p className="text-xs text-amber-400/70 mt-1">
+                  Showing {users.length} user(s) from profiles table. To see all auth users with full details:
+                </p>
+              )}
               <ol className="text-xs text-amber-400/70 mt-2 list-decimal list-inside space-y-1">
                 <li>Go to Supabase → Settings → API → Copy <code className="bg-amber-500/20 px-1 rounded">service_role</code> key</li>
                 <li>Go to Render → Backend → Environment → Add <code className="bg-amber-500/20 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code></li>
                 <li>Redeploy backend</li>
               </ol>
-              <button
-                onClick={loadAllData}
-                className="mt-3 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/30 transition-colors"
-              >
-                Refresh Data
-              </button>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={loadAllData}
+                  className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/30 transition-colors"
+                >
+                  Refresh Data
+                </button>
+                <a
+                  href="https://supabase.com/dashboard"
+                  target="_blank"
+                  className="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-medium hover:bg-blue-500/30 transition-colors"
+                >
+                  Open Supabase
+                </a>
+              </div>
             </div>
             <button
               onClick={() => {
