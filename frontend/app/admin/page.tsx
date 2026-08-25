@@ -294,36 +294,43 @@ export default function AdminDashboard() {
     }
     setBroadcastSending(true)
     try {
-      const { error } = await supabase.from('notifications').insert({
-        user_id: '00000000-0000-0000-0000-000000000000',
+      // Get all users from profiles
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1000)
+
+      if (!users || users.length === 0) {
+        toast.error('No users found')
+        setBroadcastSending(false)
+        return
+      }
+
+      // Create notifications for each user
+      const notifications = users.map((user: any) => ({
+        user_id: user.id,
         type: 'broadcast',
         title: broadcastTitle,
         body: broadcastBody,
         icon: 'B',
         action_url: broadcastUrl || null,
         priority: 'normal',
-      })
+      }))
 
-      // Use the API for actual broadcast to all users
-      const response = await fetch('/api/notifications/admin/broadcast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: broadcastTitle,
-          body: broadcastBody,
-          action_url: broadcastUrl || null,
-        }),
-      })
-      const result = await response.json()
+      // Batch insert notifications
+      const { error } = await supabase
+        .from('notifications')
+        .insert(notifications)
 
-      if (result.success) {
-        toast.success(`Broadcast sent to ${result.target_count} users!`)
+      if (error) {
+        console.error('Broadcast error:', error)
+        toast.error('Failed to send broadcast')
+      } else {
+        toast.success(`Broadcast sent to ${users.length} users!`)
         setBroadcastTitle('')
         setBroadcastBody('')
         setBroadcastUrl('')
         loadBroadcasts()
-      } else {
-        toast.error(result.detail || 'Failed to send broadcast')
       }
     } catch (err) {
       console.error('Failed to send broadcast:', err)
