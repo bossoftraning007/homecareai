@@ -477,26 +477,19 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Service Role Key Warning */}
+        {/* Service Role Key Warning - Only show if admin API not working */}
+        {adminError && (
         <div id="admin-warning" className="mx-6 mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
           <div className="flex items-start gap-3">
             <span className="text-amber-500 text-xl">!</span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-amber-400">Limited User Data</p>
-              {adminError ? (
-                <p className="text-xs text-red-400 mt-1">
-                  Error: {adminError}
-                </p>
-              ) : (
-                <p className="text-xs text-amber-400/70 mt-1">
-                  Showing {users.length} user(s) from profiles table. To see all auth users with full details:
-                </p>
-              )}
-              <ol className="text-xs text-amber-400/70 mt-2 list-decimal list-inside space-y-1">
-                <li>Go to Supabase → Settings → API → Copy <code className="bg-amber-500/20 px-1 rounded">service_role</code> key</li>
-                <li>Go to Render → Backend → Environment → Add <code className="bg-amber-500/20 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code></li>
-                <li>Redeploy backend</li>
-              </ol>
+              <p className="text-xs text-red-400 mt-1">
+                Error: {adminError}
+              </p>
+              <p className="text-xs text-amber-400/70 mt-2">
+                Showing {users.length} user(s) from profiles table as fallback.
+              </p>
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={loadAllData}
@@ -504,13 +497,6 @@ export default function AdminDashboard() {
                 >
                   Refresh Data
                 </button>
-                <a
-                  href="https://supabase.com/dashboard"
-                  target="_blank"
-                  className="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-medium hover:bg-blue-500/30 transition-colors"
-                >
-                  Open Supabase
-                </a>
               </div>
             </div>
             <button
@@ -524,6 +510,7 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
+        )}
 
         {loading && (
           <div className="flex items-center justify-center h-64">
