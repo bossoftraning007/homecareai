@@ -7,9 +7,10 @@ import Link from 'next/link'
 export default function OfflineIndicator() {
   const { theme } = useTheme()
   const [isOnline, setIsOnline] = useState(true)
-  const isDark = theme === 'dark'
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const updateOnlineStatus = () => setIsOnline(navigator.onLine)
     setIsOnline(navigator.onLine)
     window.addEventListener('online', updateOnlineStatus)
@@ -19,6 +20,11 @@ export default function OfflineIndicator() {
       window.removeEventListener('offline', updateOnlineStatus)
     }
   }, [])
+
+  const isDark = theme === 'dark'
+
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) return null
 
   return (
     <AnimatePresence>
