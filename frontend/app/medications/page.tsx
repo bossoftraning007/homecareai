@@ -32,7 +32,7 @@ export default function MedicationsPage() {
   })
 
   const isDark = theme === 'dark'
-  const { permission, subscribe } = usePushNotifications()
+  const { permission, subscription, subscribe } = usePushNotifications()
 
   const loadFromLocal = () => {
     const saved = localStorage.getItem(MEDICATION_STORAGE_KEY)
@@ -243,7 +243,7 @@ export default function MedicationsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {user && permission === 'granted' && !subscribed && (
+          {user && permission === 'granted' && !subscription && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -253,7 +253,7 @@ export default function MedicationsPage() {
               🔔 Enable Reminders
             </motion.button>
           )}
-          {subscribed && (
+          {subscription && (
             <>
               <span className="text-xs text-green-500">🔔 On</span>
               <motion.button
