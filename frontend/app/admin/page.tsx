@@ -109,17 +109,20 @@ export default function AdminDashboard() {
 
         setUsers(userEntries)
         setTotalUsers(data.total || userEntries.length)
+        setAdminError(null)
 
         const today = new Date().toISOString().split('T')[0]
         const active = userEntries.filter((u: UserEntry) => u.last_sign_in?.startsWith(today)).length
         setActiveToday(active)
       } else {
         // Fallback: load from profiles table
+        setAdminError(null)
         await loadUsersFromProfiles()
       }
     } catch (err) {
       console.error('Failed to load users from admin API:', err)
       // Fallback: load from profiles table
+      setAdminError(null)
       await loadUsersFromProfiles()
     }
   }
