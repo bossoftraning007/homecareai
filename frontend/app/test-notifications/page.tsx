@@ -174,39 +174,43 @@ export default function TestNotificationsPage() {
                  const reg = await navigator.serviceWorker.ready
                  addLog("SW ready")
 
-                 const existing = await reg.pushManager.getSubscription()
-                 if (existing) {
-                   addLog("Already subscribed!")
-                   return
+                 // Get existing subscription or create new
+                 let sub = await reg.pushManager.getSubscription()
+                 if (!sub) {
+                   addLog("No subscription, creating...")
+                   const key = vapidKey!
+                   const padding = "=".repeat((4 - (key.length % 4)) % 4)
+                   const base64 = (key + padding).replace(/-/g, "+").replace(/_/g, "/")
+                   const raw = window.atob(base64)
+                   const arr = new Uint8Array(raw.length)
+                   for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i)
+
+                   sub = await reg.pushManager.subscribe({
+                     userVisibleOnly: true,
+                     applicationServerKey: arr,
+                   })
+                   addLog("✅ Created new subscription")
+                 } else {
+                   addLog("Using existing subscription")
                  }
 
-                 addLog("Subscribing to push...")
-                 const key = vapidKey!
-                 const padding = "=".repeat((4 - (key.length % 4)) % 4)
-                 const base64 = (key + padding).replace(/-/g, "+").replace(/_/g, "/")
-                 const raw = window.atob(base64)
-                 const arr = new Uint8Array(raw.length)
-                 for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i)
-
-                 const sub = await reg.pushManager.subscribe({
-                   userVisibleOnly: true,
-                   applicationServerKey: arr,
-                 })
-                 addLog("✅ Subscribed! Sending to server...")
-
+                 addLog("Sending to server...")
                  const res = await fetch("/api/notifications/push/subscribe", {
                    method: "POST",
                    headers: { "Content-Type": "application/json" },
                    body: JSON.stringify(sub.toJSON()),
                  })
                  addLog(`Server response: ${res.status}`)
+                 const data = await res.json()
+                 addLog(`Server reply: ${JSON.stringify(data)}`)
                } catch (err: any) {
                  addLog(`❌ Error: ${err.message}`)
+                 console.error("Subscribe error:", err)
                }
              }}
              className="px-4 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium"
            >
-             Debug Subscribe
+             Save Sub to Server
            </button>
         </div>
 
