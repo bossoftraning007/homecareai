@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
+import { supabase } from "@/lib/supabase"
 
 export default function PushDiagnostic() {
   const { theme } = useTheme()
@@ -39,6 +40,22 @@ export default function PushDiagnostic() {
       }
     } catch (err: any) {
       addLog("❌ Error: " + err.message)
+    }
+  }
+
+  const unsubscribe = async () => {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const existing = await reg.pushManager.getSubscription()
+      if (existing) {
+        await existing.unsubscribe()
+        setSub(null)
+        addLog("✅ Unsubscribed! Now you can subscribe with new VAPID key")
+      } else {
+        addLog("No subscription to unsubscribe")
+      }
+    } catch (err: any) {
+      addLog("❌ Unsubscribe failed: " + err.message)
     }
   }
 
@@ -99,9 +116,15 @@ export default function PushDiagnostic() {
   const testPushFromServer = async () => {
     try {
       addLog("Sending test push from server...")
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       const res = await fetch("/api/notifications/push/broadcast", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           title: "Test Push",
           body: "This is a test push from server!",
@@ -134,6 +157,13 @@ export default function PushDiagnostic() {
             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
           >
             Check Status
+          </button>
+
+          <button
+            onClick={unsubscribe}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm"
+          >
+            Unsubscribe
           </button>
 
           <button
