@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import httpx
 from pywebpush import webpush
 from config.database import get_supabase
@@ -131,13 +132,16 @@ def send_push_notification(subscription_info: dict, title: str, body: str, icon:
         "icon": icon or "/logo.svg",
         "badge": "/logo.svg",
         "data": data or {},
-        "tag": data.get("tag", "homecare-notification") if data else "homecare-notification",
+        "tag": "homecare-notification-" + str(int(time.time() * 1000)),
         "renotify": True,
-        "requireInteraction": data.get("requireInteraction", False) if data else False,
+        "requireInteraction": True,
+        "vibrate": [300, 100, 300, 100, 300],
+        "silent": False,
+        "timestamp": int(time.time() * 1000),
     })
 
     try:
-        print(f"[PUSH] Sending to: {subscription_info.get('endpoint', '')[:50]}...")
+        print(f"[PUSH] Sending to: {subscription_info.get('endpoint', '')[:60]}...")
         webpush(
             subscription_info=subscription_info,
             data=payload,

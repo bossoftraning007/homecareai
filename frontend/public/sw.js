@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homecare-ai-cache-v3'
+const CACHE_NAME = 'homecare-ai-cache-v4'
 const OFFLINE_PAGE = '/offline'
 
 const urlsToCache = [
@@ -37,22 +37,62 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('push', (event) => {
-  if (!event.data) return
-  const data = event.data.json()
-  const options = {
-    body: data.body,
-    icon: data.icon || '/logo.svg',
-    badge: '/logo.svg',
-    data: data.data || {},
-    tag: data.tag || 'homecare-notification',
-    renotify: true,
-    requireInteraction: true,
-    vibrate: [200, 100, 200, 100, 200],
-    silent: false,
-    timestamp: Date.now(),
+  console.log('[SW] Push event received')
+  if (!event.data) {
+    console.log('[SW] No data in push event')
+    return
   }
+
+  try {
+    const data = event.data.json()
+    console.log('[SW] Push data:', data)
+
+    const options = {
+      body: data.body || 'New notification from HomeCare AI',
+      icon: data.icon || '/logo.svg',
+      badge: '/logo.svg',
+      data: data.data || {},
+      tag: data.tag || 'homecare-notification-' + Date.now(),
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [300, 100, 300, 100, 300, 100, 300],
+      silent: false,
+      timestamp: Date.now(),
+      actions: [
+        { action: 'open', title: 'Open App', icon: '/logo.svg' },
+        { action: 'dismiss', title: 'Dismiss', icon: '/logo.svg' },
+      ],
+    }
+
+    console.log('[SW] Showing notification:', data.title, options)
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'HomeCare AI', options)
+        .then(() => console.log('[SW] Notification shown successfully'))
+        .catch(err => console.error('[SW] Failed to show notification:', err))
+    )
+  } catch (err) {
+    console.error('[SW] Error handling push:', err)
+  }
+})
+
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification clicked:', event.action)
+  event.notification.close()
+
+  if (event.action === 'dismiss') {
+    return
+  }
+
+  const urlToOpen = event.notification.data?.url || '/'
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(windowClients => {
+        const matching = windowClients.find(client => client.url.includes(urlToOpen))
+        if (matching) {
+          return matching.focus()
+        }
+        return clients.openWindow(urlToOpen)
+      })
   )
 })
 
@@ -62,7 +102,6 @@ self.addEventListener('pushsubscriptionchange', (event) => {
       userVisibleOnly: true,
       applicationServerKey: event.oldSubscription?.options?.applicationServerKey,
     }).then((newSubscription) => {
-      // Send new subscription to server
       return fetch('/api/notifications/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,7 +111,6 @@ self.addEventListener('pushsubscriptionchange', (event) => {
   )
 })
 
-// Log service worker activation
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting()
@@ -83,35 +121,20 @@ self.addEventListener('message', (event) => {
       body: payload.body,
       icon: payload.icon || '/logo.svg',
       badge: '/logo.svg',
-      vibrate: [200, 100, 200],
+      vibrate: [300, 100, 300],
       requireInteraction: true,
     })
   }
-})
-  event.notification.close()
-  const urlToOpen = event.notification.data?.url || '/'
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(windowClients => {
-        const matching = windowClients.find(client => client.url === urlToOpen)
-        if (matching) {
-          return matching.focus()
-        }
-        return clients.openWindow(urlToOpen)
-      })
-  )
 })
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Only cache GET requests
   if (request.method !== 'GET') {
     return
   }
 
-  // Never cache API responses - they contain sensitive health data
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(request))
     return
