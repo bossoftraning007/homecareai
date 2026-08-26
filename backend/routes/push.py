@@ -34,6 +34,7 @@ async def subscribe_push(request: Request):
     """Subscribe to push notifications."""
     try:
         data = await request.json()
+        print(f"[PUSH] Subscribe request received, data keys: {list(data.keys())}")
 
         # Try to get user from JWT if available
         user_id = None
@@ -42,13 +43,15 @@ async def subscribe_push(request: Request):
             try:
                 user = await get_current_user(request)
                 user_id = user["id"]
-            except Exception:
-                pass  # Anonymous subscription is okay
+                print(f"[PUSH] User authenticated: {user_id}")
+            except Exception as e:
+                print(f"[PUSH] Auth failed: {e}")
 
         # Save subscription (with user_id if available)
         await save_subscription(user_id, data)
         return {"status": "subscribed", "user_id": user_id}
     except Exception as e:
+        print(f"[PUSH] Subscribe error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -18,17 +18,21 @@ async def save_subscription(user_id: str | None, subscription: dict):
     try:
         supabase = get_supabase()
         if not supabase:
+            print("[PUSH] Supabase client not available")
             return
 
         endpoint = subscription.get("endpoint")
         p256dh = subscription.get("keys", {}).get("p256dh")
         auth = subscription.get("keys", {}).get("auth")
 
+        print(f"[PUSH] Saving subscription for user: {user_id}, endpoint: {endpoint[:50] if endpoint else 'None'}...")
+
         # Check if endpoint already exists
         existing = supabase.table("push_subscriptions").select("*").eq("endpoint", endpoint).execute()
 
         if existing.data:
             # Update existing
+            print("[PUSH] Updating existing subscription")
             supabase.table("push_subscriptions").update({
                 "user_id": user_id,
                 "p256dh": p256dh,
@@ -36,14 +40,17 @@ async def save_subscription(user_id: str | None, subscription: dict):
             }).eq("endpoint", endpoint).execute()
         else:
             # Insert new
+            print("[PUSH] Inserting new subscription")
             supabase.table("push_subscriptions").insert({
                 "user_id": user_id,
                 "endpoint": endpoint,
                 "p256dh": p256dh,
                 "auth": auth,
             }).execute()
+
+        print("[PUSH] Subscription saved successfully")
     except Exception as e:
-        print(f"Failed to save subscription: {e}")
+        print(f"[PUSH] Failed to save subscription: {e}")
 
 
 async def get_all_subscriptions():
