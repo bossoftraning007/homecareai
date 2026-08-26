@@ -56,9 +56,9 @@ export default function TestNotificationsPage() {
         body: "This is a test notification from HomeCare AI!",
         icon: "/logo.svg",
         badge: "/logo.svg",
-        vibrate: [200, 100, 200],
         requireInteraction: true,
-      })
+        vibrate: [200, 100, 200],
+      } as NotificationOptions)
       addLog("✅ Test notification sent!")
     } catch (err: any) {
       addLog(`❌ Failed: ${err.message}`)
