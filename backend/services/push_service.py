@@ -122,7 +122,7 @@ async def get_all_subscriptions():
 def send_push_notification(subscription_info: dict, title: str, body: str, icon: str = None, data: dict = None):
     """Send push notification to a single subscription."""
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        print("VAPID keys not configured")
+        print("[PUSH] VAPID keys not configured")
         return False
 
     payload = json.dumps({
@@ -137,6 +137,7 @@ def send_push_notification(subscription_info: dict, title: str, body: str, icon:
     })
 
     try:
+        print(f"[PUSH] Sending to: {subscription_info.get('endpoint', '')[:50]}...")
         webpush(
             subscription_info=subscription_info,
             data=payload,
@@ -145,9 +146,10 @@ def send_push_notification(subscription_info: dict, title: str, body: str, icon:
                 "sub": "mailto:admin@homecareai.vercel.app",
             },
         )
+        print("[PUSH] Sent successfully")
         return True
     except Exception as e:
-        print(f"Push notification failed: {e}")
+        print(f"[PUSH] Push notification failed: {e}")
         return False
 
 
@@ -157,10 +159,15 @@ async def send_broadcast_push(title: str, body: str, url: str = None):
     if not subscriptions:
         return {"status": "no_subscribers", "sent": 0, "failed": 0}
 
+    print(f"[PUSH] Broadcasting to {len(subscriptions)} subscriptions")
+
     sent = 0
     failed = 0
 
     for sub in subscriptions:
+        # Skip test subscriptions
+        if sub.get("endpoint") == "test123":
+            continue
         success = send_push_notification(
             sub,
             title,
@@ -172,4 +179,5 @@ async def send_broadcast_push(title: str, body: str, url: str = None):
         else:
             failed += 1
 
+    print(f"[PUSH] Broadcast complete: {sent} sent, {failed} failed")
     return {"status": "completed", "sent": sent, "failed": failed, "total": len(subscriptions)}
