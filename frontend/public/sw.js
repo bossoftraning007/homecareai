@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homecare-ai-cache-v2'
+const CACHE_NAME = 'homecare-ai-cache-v3'
 const OFFLINE_PAGE = '/offline'
 
 const urlsToCache = [
@@ -46,14 +46,48 @@ self.addEventListener('push', (event) => {
     data: data.data || {},
     tag: data.tag || 'homecare-notification',
     renotify: true,
-    requireInteraction: data.requireInteraction || false,
+    requireInteraction: true,
+    vibrate: [200, 100, 200, 100, 200],
+    silent: false,
+    timestamp: Date.now(),
   }
   event.waitUntil(
     self.registration.showNotification(data.title, options)
   )
 })
 
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: event.oldSubscription?.options?.applicationServerKey,
+    }).then((newSubscription) => {
+      // Send new subscription to server
+      return fetch('/api/notifications/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSubscription.toJSON()),
+      })
+    })
+  )
+})
+
+// Log service worker activation
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+  if (event.data && event.data.type === 'TEST_PUSH') {
+    const payload = event.data.payload
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: payload.icon || '/logo.svg',
+      badge: '/logo.svg',
+      vibrate: [200, 100, 200],
+      requireInteraction: true,
+    })
+  }
+})
   event.notification.close()
   const urlToOpen = event.notification.data?.url || '/'
   event.waitUntil(
