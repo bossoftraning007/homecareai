@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from services.push_service import send_push_notification, send_broadcast_push, save_subscription, get_all_subscriptions
@@ -30,11 +30,19 @@ class EmailNotificationRequest(BaseModel):
 
 
 @router.post("/push/subscribe")
-async def subscribe_push(request: Request, current_user: dict = Depends(get_current_user)):
+async def subscribe_push(request: Request):
     """Subscribe to push notifications."""
-    data = await request.json()
-    await save_subscription(current_user["id"], data)
-    return {"status": "subscribed"}
+    try:
+        # Get user from JWT
+        auth_header = request.headers.get("Authorization", "")
+        user = await get_current_user(request)
+        data = await request.json()
+        await save_subscription(user["id"], data)
+        return {"status": "subscribed"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/push/unsubscribe")
@@ -108,6 +116,3 @@ async def list_subscriptions(current_user: dict = Depends(get_current_user)):
 
     subscriptions = await get_all_subscriptions()
     return {"subscriptions": subscriptions, "count": len(subscriptions)}
-
-
-from fastapi import Request

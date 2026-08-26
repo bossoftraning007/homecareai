@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 
@@ -52,10 +53,17 @@ export function usePushNotifications() {
       setSubscription(newSub)
       setPermission('granted')
 
-      // Send subscription to backend
+      // Get JWT token from Supabase
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      // Send subscription to backend with auth
       await fetch('/api/notifications/push/subscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(newSub.toJSON()),
       })
 
@@ -73,10 +81,17 @@ export function usePushNotifications() {
       await subscription.unsubscribe()
       setSubscription(null)
 
+      // Get JWT token
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
       // Notify backend
       await fetch('/api/notifications/push/unsubscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ endpoint: subscription.endpoint }),
       })
     } catch (err) {
