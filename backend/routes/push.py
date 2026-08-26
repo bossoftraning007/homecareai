@@ -29,7 +29,7 @@ class EmailNotificationRequest(BaseModel):
     action_url: Optional[str] = None
 
 
-@router.post("/push/subscribe")
+@router.post("/subscribe")
 async def subscribe_push(request: Request):
     """Subscribe to push notifications."""
     try:
@@ -55,14 +55,14 @@ async def subscribe_push(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/push/unsubscribe")
+@router.post("/unsubscribe")
 async def unsubscribe_push(request: Request, current_user: dict = Depends(get_current_user)):
     """Unsubscribe from push notifications."""
     # TODO: Remove from database
     return {"status": "unsubscribed"}
 
 
-@router.post("/push/broadcast")
+@router.post("/broadcast")
 async def broadcast_push(req: PushBroadcastRequest, current_user: dict = Depends(get_current_user)):
     """Send push notification to all subscribed users (admin only)."""
     # Check admin
