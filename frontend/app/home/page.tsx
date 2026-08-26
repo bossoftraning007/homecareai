@@ -25,6 +25,7 @@ const symptoms = [
 
 const features = [
   { icon: '💬', label: 'AI Chat', href: '/chat', color: 'from-emerald-500 to-teal-500', desc: 'Talk to AI for natural remedies' },
+  { icon: '🧬', label: 'Health Twin', href: '/recovery', color: 'from-pink-500 to-rose-500', desc: 'Predictive recovery timeline' },
   { icon: '🎤', label: 'Voice Mode', href: '/voice', color: 'from-purple-500 to-pink-500', desc: 'Hands-free conversation' },
   { icon: '🌦️', label: 'Seasonal', href: '/seasonal', color: 'from-sky-500 to-blue-500', desc: 'Health guide by season' },
   { icon: '📋', label: 'Assessment', href: '/questionnaire', color: 'from-indigo-500 to-purple-500', desc: 'Guided health questions' },

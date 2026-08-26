@@ -9,6 +9,7 @@ from routes.admin import router as admin_router
 from routes.notifications import router as notifications_router
 from routes.reminders import router as reminders_router
 from routes.analytics import router as analytics_router
+from routes.recovery import router as recovery_router
 import time
 
 app = FastAPI(
@@ -77,6 +78,7 @@ app.include_router(admin_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(reminders_router, prefix="/api")
 app.include_router(analytics_router, prefix="/api")
+app.include_router(recovery_router, prefix="/api/recovery")
 
 @app.get("/")
 def root():
