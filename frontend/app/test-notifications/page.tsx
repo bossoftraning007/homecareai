@@ -157,12 +157,57 @@ export default function TestNotificationsPage() {
             Test Local Notification
           </button>
 
-          <button
-            onClick={testPushEvent}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium"
-          >
-            Test Push Event
-          </button>
+           <button
+             onClick={testPushEvent}
+             className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium"
+           >
+             Test Push Event
+           </button>
+
+           <button
+             onClick={async () => {
+               addLog("=== DEBUG SUBSCRIBE ===")
+               try {
+                 const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+                 addLog(`VAPID key: ${vapidKey ? vapidKey.substring(0, 30) + "..." : "MISSING!"}`)
+
+                 const reg = await navigator.serviceWorker.ready
+                 addLog("SW ready")
+
+                 const existing = await reg.pushManager.getSubscription()
+                 if (existing) {
+                   addLog("Already subscribed!")
+                   return
+                 }
+
+                 addLog("Subscribing to push...")
+                 const key = vapidKey!
+                 const padding = "=".repeat((4 - (key.length % 4)) % 4)
+                 const base64 = (key + padding).replace(/-/g, "+").replace(/_/g, "/")
+                 const raw = window.atob(base64)
+                 const arr = new Uint8Array(raw.length)
+                 for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i)
+
+                 const sub = await reg.pushManager.subscribe({
+                   userVisibleOnly: true,
+                   applicationServerKey: arr,
+                 })
+                 addLog("✅ Subscribed! Sending to server...")
+
+                 const res = await fetch("/api/notifications/push/subscribe", {
+                   method: "POST",
+                   headers: { "Content-Type": "application/json" },
+                   body: JSON.stringify(sub.toJSON()),
+                 })
+                 addLog(`Server response: ${res.status}`)
+               } catch (err: any) {
+                 addLog(`❌ Error: ${err.message}`)
+               }
+             }}
+             className="px-4 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium"
+           >
+             Debug Subscribe
+           </button>
         </div>
 
         {/* Logs */}
