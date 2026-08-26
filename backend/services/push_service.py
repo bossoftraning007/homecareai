@@ -16,9 +16,12 @@ subscription_store = {}
 async def save_subscription(user_id: str | None, subscription: dict):
     """Save push subscription to database."""
     try:
-        supabase = get_supabase()
-        if not supabase:
-            print("[PUSH] Supabase client not available")
+        # Use service role key for bypassing RLS
+        supabase_url = os.environ.get("SUPABASE_URL", "")
+        service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+
+        if not supabase_url or not service_key:
+            print("[PUSH] Supabase URL or service key not configured")
             return
 
         endpoint = subscription.get("endpoint")
@@ -27,26 +30,54 @@ async def save_subscription(user_id: str | None, subscription: dict):
 
         print(f"[PUSH] Saving subscription for user: {user_id}, endpoint: {endpoint[:50] if endpoint else 'None'}...")
 
-        # Check if endpoint already exists
-        existing = supabase.table("push_subscriptions").select("*").eq("endpoint", endpoint).execute()
+        # Check if endpoint already exists using direct API call with service key
+        async with httpx.AsyncClient() as client:
+            # Check existing
+            check_resp = await client.get(
+                f"{supabase_url}/rest/v1/push_subscriptions?endpoint=eq.{endpoint}&select=id",
+                headers={
+                    "apikey": service_key,
+                    "Authorization": f"Bearer {service_key}",
+                },
+            )
+            existing = check_resp.json() if check_resp.status_code == 200 else []
 
-        if existing.data:
-            # Update existing
-            print("[PUSH] Updating existing subscription")
-            supabase.table("push_subscriptions").update({
-                "user_id": user_id,
-                "p256dh": p256dh,
-                "auth": auth,
-            }).eq("endpoint", endpoint).execute()
-        else:
-            # Insert new
-            print("[PUSH] Inserting new subscription")
-            supabase.table("push_subscriptions").insert({
-                "user_id": user_id,
-                "endpoint": endpoint,
-                "p256dh": p256dh,
-                "auth": auth,
-            }).execute()
+            if existing:
+                # Update
+                print("[PUSH] Updating existing subscription")
+                await client.patch(
+                    f"{supabase_url}/rest/v1/push_subscriptions?endpoint=eq.{endpoint}",
+                    headers={
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal",
+                    },
+                    json={
+                        "user_id": user_id,
+                        "p256dh": p256dh,
+                        "auth": auth,
+                    },
+                )
+            else:
+                # Insert
+                print("[PUSH] Inserting new subscription")
+                insert_resp = await client.post(
+                    f"{supabase_url}/rest/v1/push_subscriptions",
+                    headers={
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal",
+                    },
+                    json={
+                        "user_id": user_id,
+                        "endpoint": endpoint,
+                        "p256dh": p256dh,
+                        "auth": auth,
+                    },
+                )
+                print(f"[PUSH] Insert response: {insert_resp.status_code}")
 
         print("[PUSH] Subscription saved successfully")
     except Exception as e:
@@ -56,26 +87,35 @@ async def save_subscription(user_id: str | None, subscription: dict):
 async def get_all_subscriptions():
     """Get all push subscriptions from database."""
     try:
-        supabase = get_supabase()
-        if not supabase:
+        supabase_url = os.environ.get("SUPABASE_URL", "")
+        service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+
+        if not supabase_url or not service_key:
             return []
 
-        result = supabase.table("push_subscriptions").select("*").execute()
-        data = result.data
-
-        return [
-            {
-                "user_id": sub["user_id"],
-                "endpoint": sub["endpoint"],
-                "keys": {
-                    "p256dh": sub["p256dh"],
-                    "auth": sub["auth"],
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{supabase_url}/rest/v1/push_subscriptions?select=*",
+                headers={
+                    "apikey": service_key,
+                    "Authorization": f"Bearer {service_key}",
                 },
-            }
-            for sub in data
-        ]
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                return [
+                    {
+                        "user_id": sub["user_id"],
+                        "endpoint": sub["endpoint"],
+                        "keys": {
+                            "p256dh": sub["p256dh"],
+                            "auth": sub["auth"],
+                        },
+                    }
+                    for sub in data
+                ]
     except Exception as e:
-        print(f"Failed to get subscriptions: {e}")
+        print(f"[PUSH] Failed to get subscriptions: {e}")
     return []
 
 
