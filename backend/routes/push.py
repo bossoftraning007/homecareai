@@ -33,14 +33,21 @@ class EmailNotificationRequest(BaseModel):
 async def subscribe_push(request: Request):
     """Subscribe to push notifications."""
     try:
-        # Get user from JWT
-        auth_header = request.headers.get("Authorization", "")
-        user = await get_current_user(request)
         data = await request.json()
-        await save_subscription(user["id"], data)
-        return {"status": "subscribed"}
-    except HTTPException:
-        raise
+
+        # Try to get user from JWT if available
+        user_id = None
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            try:
+                user = await get_current_user(request)
+                user_id = user["id"]
+            except Exception:
+                pass  # Anonymous subscription is okay
+
+        # Save subscription (with user_id if available)
+        await save_subscription(user_id, data)
+        return {"status": "subscribed", "user_id": user_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
