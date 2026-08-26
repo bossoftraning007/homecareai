@@ -3,18 +3,31 @@
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { supabase } from "@/lib/supabase"
+import Link from "next/link"
 
 export default function PushDiagnostic() {
   const { theme } = useTheme()
   const [logs, setLogs] = useState<string[]>([])
   const [sub, setSub] = useState<PushSubscription | null>(null)
+  const [user, setUser] = useState<any>(null)
   const [mounted, setMounted] = useState(false)
   const isDark = theme === "dark"
 
   useEffect(() => {
     setMounted(true)
     checkSubscription()
+    checkUser()
   }, [])
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    setUser(session?.user || null)
+    if (session?.user) {
+      addLog("✅ Logged in: " + session.user.email)
+    } else {
+      addLog("❌ Not logged in - login to send broadcasts")
+    }
+  }
 
   const addLog = (msg: string) => {
     setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`])
@@ -222,6 +235,14 @@ export default function PushDiagnostic() {
             <li>If tab is open and active, notification won&apos;t appear</li>
             <li>Check Windows notification settings for your browser</li>
             <li>Close browser completely after subscribing</li>
+            <li>
+              {!user && (
+                <Link href="/login" className="underline font-bold">
+                  Login here
+                </Link>
+              )}{" "}
+              to send broadcasts
+            </li>
           </ul>
         </div>
       </div>
