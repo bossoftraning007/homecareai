@@ -89,7 +89,7 @@ export default function PushDiagnostic() {
         vibrate: [300, 100, 300, 100, 300],
         requireInteraction: true,
         tag: "local-test-" + Date.now(),
-      })
+      } as NotificationOptions)
       addLog("✅ Local notification sent - DO YOU SEE IT?")
     } catch (err: any) {
       addLog("❌ Failed: " + err.message)
