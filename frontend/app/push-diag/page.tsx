@@ -132,6 +132,13 @@ export default function PushDiagnostic() {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token
 
+      if (!token) {
+        addLog("❌ No token found - try logging out and back in")
+        return
+      }
+
+      addLog("Token found: " + token.substring(0, 30) + "...")
+
       const res = await fetch("/api/notifications/push/broadcast", {
         method: "POST",
         headers: {
@@ -144,6 +151,7 @@ export default function PushDiagnostic() {
           url: "/",
         }),
       })
+      addLog("Response status: " + res.status)
       const data = await res.json()
       addLog("Server response: " + JSON.stringify(data))
     } catch (err: any) {
