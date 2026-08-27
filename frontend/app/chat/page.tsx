@@ -322,6 +322,24 @@ export default function ChatPage() {
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify([...updatedMessages, finalMsg]))
 
+      // Log timeline event for chat
+      if (user) {
+        fetch(`${API_URL}/api/timeline`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.access_token || ''}`,
+          },
+          body: JSON.stringify({
+            event_type: 'chat',
+            title: `AI Chat: ${messageText.substring(0, 50)}${messageText.length > 50 ? '...' : ''}`,
+            description: fullContent.substring(0, 100),
+            icon: '💬',
+            metadata: { is_emergency: isEmergency },
+          }),
+        }).catch(() => {}) // Don't break chat if timeline fails
+      }
+
       if (isEmergency) {
         toast.error(t.emergency, { icon: '🚨', duration: 5000 })
       }

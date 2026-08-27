@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from services.reminder_service import create_reminder, get_active_reminders, process_due_reminders
 from services.auth_service import get_current_user
+from services.timeline_service import log_event
 
 router = APIRouter(prefix="/api/reminders", tags=["reminders"])
 
@@ -44,6 +45,17 @@ async def create_new_reminder(req: ReminderRequest, current_user: dict = Depends
         reminder["days_of_week"] = req.days_of_week
 
     result = supabase.table("reminders").insert(reminder).execute()
+
+    # Log timeline event
+    await log_event(
+        user_id=current_user["id"],
+        event_type="medication",
+        title=f"Reminder created: {reminder['title']}",
+        description=reminder.get("message"),
+        icon="⏰",
+        metadata={"reminder_type": req.type, "scheduled_time": req.scheduled_time},
+    )
+
     return {"reminder": result.data[0] if result.data else None}
 
 

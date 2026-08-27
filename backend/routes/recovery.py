@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Request, HTTPException
 from config.database import get_supabase
 from services.recovery_service import create_recovery_plan, calculate_progress
+from services.timeline_service import log_event
 
 router = APIRouter()
 
@@ -73,6 +74,16 @@ async def create_new_plan(request: Request):
 
         if milestones_data:
             supabase.table("recovery_milestones").insert(milestones_data).execute()
+
+        # Log timeline event
+        await log_event(
+            user_id=user_id,
+            event_type="recovery",
+            title=f"Recovery plan started: {plan.title}",
+            description=f"Remedy: {plan.remedy} | Severity: {plan.severity}/5",
+            icon="🧬",
+            metadata={"plan_id": plan_record["id"], "symptom": symptom, "remedy": remedy},
+        )
 
         return {
             "plan": plan_record,
@@ -200,6 +211,16 @@ async def complete_plan(plan_id: str, request: Request):
             "status": "reached",
             "reached_at": datetime.utcnow().isoformat(),
         }).eq("plan_id", plan_id).eq("status", "pending").execute()
+
+        # Log timeline event
+        await log_event(
+            user_id=user_id,
+            event_type="recovery",
+            title="Recovery plan completed! 🎉",
+            description="You completed your recovery journey",
+            icon="🏆",
+            metadata={"plan_id": plan_id, "completed": True},
+        )
 
         return {"plan": response.data}
     except HTTPException:

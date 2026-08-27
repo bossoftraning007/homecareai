@@ -25,6 +25,7 @@ const symptoms = [
 
 const features = [
   { icon: '💬', label: 'AI Chat', href: '/chat', color: 'from-emerald-500 to-teal-500', desc: 'Talk to AI for natural remedies' },
+  { icon: '🌿', label: 'Health Journey', href: '/journey', color: 'from-green-500 to-emerald-500', desc: 'Your complete health timeline' },
   { icon: '🧬', label: 'Health Twin', href: '/recovery', color: 'from-pink-500 to-rose-500', desc: 'Predictive recovery timeline' },
   { icon: '🎤', label: 'Voice Mode', href: '/voice', color: 'from-purple-500 to-pink-500', desc: 'Hands-free conversation' },
   { icon: '🌦️', label: 'Seasonal', href: '/seasonal', color: 'from-sky-500 to-blue-500', desc: 'Health guide by season' },
@@ -408,6 +409,16 @@ export default function HomePage() {
               <div className="text-3xl mb-2">📊</div>
               <h3 className="text-md font-black">Health Insights</h3>
               <p className="text-white/80 text-xs mt-1">AI-powered analysis</p>
+            </div>
+          </Link>
+        </motion.div>
+
+        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} whileHover={{ y: -5 }} className="col-span-6 sm:col-span-3 md:col-span-3">
+          <Link href="/journey">
+            <div className="h-full min-h-[140px] p-5 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-xl group cursor-pointer">
+              <div className="text-3xl mb-2">🌿</div>
+              <h3 className="text-md font-black">Health Journey</h3>
+              <p className="text-white/80 text-xs mt-1">Your timeline</p>
             </div>
           </Link>
         </motion.div>
