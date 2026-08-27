@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
-from services.push_service import send_push, broadcast_push, save_subscription, get_all_subscriptions
+from services.push_service import send_push, save_subscription, get_all_subscriptions
 from services.auth_service import get_current_user
 from config.database import get_supabase
 
@@ -18,6 +18,24 @@ class BroadcastRequest(BaseModel):
     title: str
     body: str
     url: Optional[str] = "/"
+
+
+async def broadcast_push(title: str, body: str, url: str = "/"):
+    """Send push to all subscribers."""
+    subs = await get_all_subscriptions()
+    if not subs:
+        return {"status": "no_subscribers", "sent": 0, "failed": 0}
+
+    sent = 0
+    failed = 0
+
+    for sub in subs:
+        if send_push(sub, title, body, url):
+            sent += 1
+        else:
+            failed += 1
+
+    return {"status": "completed", "sent": sent, "failed": failed, "total": len(subs)}
 
 
 @router.post("/subscribe")
