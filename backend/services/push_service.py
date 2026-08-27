@@ -59,6 +59,7 @@ async def save_subscription(user_id, subscription):
 async def get_all_subscriptions():
     """Get all push subscriptions."""
     try:
+        print("[PUSH] Getting subscriptions...")
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{SUPABASE_URL}/rest/v1/push_subscriptions?select=*",
@@ -67,8 +68,10 @@ async def get_all_subscriptions():
                     "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
                 },
             )
+            print(f"[PUSH] Response status: {resp.status_code}")
             if resp.status_code == 200:
                 data = resp.json()
+                print(f"[PUSH] Found {len(data)} rows")
                 return [
                     {
                         "user_id": sub["user_id"],
@@ -78,8 +81,12 @@ async def get_all_subscriptions():
                     for sub in data
                     if sub.get("endpoint") and sub["endpoint"] != "test123"
                 ]
+            else:
+                print(f"[PUSH] Error response: {resp.text}")
     except Exception as e:
         print(f"[PUSH] Get error: {e}")
+        import traceback
+        traceback.print_exc()
     return []
 
 

@@ -9,14 +9,19 @@ router = APIRouter()
 async def send_test_push(request: Request):
     """Send a test push notification to all subscribers."""
     try:
+        print("[PUSH] /send-test called")
+
         # Get all subscriptions
         subs = await get_all_subscriptions()
+        print(f"[PUSH] Found {len(subs)} subscriptions")
 
         if not subs:
             return {"status": "no_subscribers", "message": "No subscriptions found"}
 
         # Send to first subscription
         sub = subs[0]
+        print(f"[PUSH] Sending to: {sub['endpoint'][:50]}...")
+
         success = send_push(sub, "Test Notification", "Hello from HomeCare AI! 🌿", "/")
 
         if success:
@@ -25,4 +30,7 @@ async def send_test_push(request: Request):
             return {"status": "failed", "message": "Push failed to send"}
 
     except Exception as e:
+        print(f"[PUSH] Error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
