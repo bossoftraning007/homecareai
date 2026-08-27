@@ -68,6 +68,7 @@ async def get_all_subscriptions():
                 },
             )
             if resp.status_code == 200:
+                data = resp.json()
                 return [
                     {
                         "user_id": sub["user_id"],
