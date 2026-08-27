@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from routes.chat import router as chat_router
 from routes.push import router as push_router
+from routes.push_test import router as push_test_router
 from routes.stream import router as stream_router
 from routes.auth_webhook import router as auth_webhook_router
 from routes.admin import router as admin_router
@@ -72,6 +73,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(push_router, prefix="/api/push")
+app.include_router(push_test_router, prefix="/api/push")
 app.include_router(stream_router, prefix="/api")
 app.include_router(auth_webhook_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
