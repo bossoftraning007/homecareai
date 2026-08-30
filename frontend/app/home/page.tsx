@@ -2,11 +2,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
-import toast, { Toaster } from 'react-hot-toast'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/lib/useAuth'
-import { NotificationBell } from '../components/Notifications'
+import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
+import Footer from '@/components/Footer'
 
 const symptoms = [
   { icon: '🤧', label: 'Cold', value: 'I have a cold and blocked nose' },
@@ -51,8 +53,8 @@ const dailyTips = [
 
 export default function HomePage() {
   const router = useRouter()
-  const { theme, setTheme } = useTheme()
-  const { user, signOut } = useAuth()
+  const { theme } = useTheme()
+  const { user } = useAuth()
   const [mounted, setMounted] = useState(false)
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
@@ -91,15 +93,6 @@ export default function HomePage() {
     navigateTimeoutRef.current = setTimeout(() => router.push('/chat'), 500)
   }, [input, router])
 
-  const handleLogout = async () => {
-    if (confirm('Logout?')) {
-      await signOut()
-      toast.success('Logged out!', { icon: '👋' })
-    }
-  }
-
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0]
-
   const filteredSymptoms = symptoms.filter(s =>
     s.label.toLowerCase().includes(search.toLowerCase())
   )
@@ -107,168 +100,19 @@ export default function HomePage() {
   if (!mounted) return null
 
   return (
-    <div className={`min-h-screen relative overflow-hidden smooth-scroll ${isDark
-      ? 'bg-gradient-to-br from-gray-900 via-emerald-950 to-green-950'
-      : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'
-      }`}>
-      <Toaster position="top-center" />
+    <div className={`min-h-screen relative overflow-hidden smooth-scroll ${
+      isDark
+        ? 'bg-gradient-to-br from-gray-900 via-emerald-950 to-green-950'
+        : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'
+    }`}>
+      {/* New Navbar */}
+      <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-      {/* Sidebar */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-            />
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25 }}
-              className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] z-50 shadow-2xl overflow-y-auto safe-bottom ${isDark ? 'bg-gray-900' : 'bg-white'}`}
-            >
-              <div className={`p-6 border-b safe-top ${isDark ? 'border-emerald-900' : 'border-emerald-100'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-3xl">🌿</span>
-                    <span className={`text-xl font-black tracking-tight ${isDark ? 'text-emerald-200' : 'text-emerald-900'}`}>
-                      HomeCare<span className="text-emerald-500">AI</span>
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className={`p-2 rounded-lg text-xl ${isDark ? 'hover:bg-white/10 text-white' : 'hover:bg-black/5 text-gray-900'}`}
-                  >
-                    ✕
-                  </button>
-                </div>
-                {user && (
-                  <Link href="/profile" onClick={() => setSidebarOpen(false)}>
-                    <div className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'bg-emerald-900/30 hover:bg-emerald-900/50' : 'bg-emerald-50 hover:bg-emerald-100'}`}>
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">
-                        {displayName?.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className={`font-semibold text-sm ${isDark ? 'text-emerald-200' : 'text-emerald-900'}`}>{displayName}</div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-700'}`}>View profile</div>
-                      </div>
-                    </div>
-                  </Link>
-                )}
-              </div>
-
-              <div className="p-4">
-                <div className={`text-xs font-bold tracking-wider mb-3 ${isDark ? 'text-emerald-400/60' : 'text-emerald-600/60'}`}>FEATURES</div>
-                <nav className="space-y-1">
-                  {features.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-emerald-50 text-emerald-900'}`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center text-xl shadow-md`}>
-                        {item.icon}
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{item.label}</div>
-                        <div className={`text-xs ${isDark ? 'text-emerald-400/60' : 'text-emerald-600/60'}`}>{item.desc}</div>
-                      </div>
-                    </Link>
-                  ))}
-                </nav>
-
-                <div className={`text-xs font-bold tracking-wider mb-3 mt-6 ${isDark ? 'text-emerald-400/60' : 'text-emerald-600/60'}`}>MORE</div>
-                <nav className="space-y-1">
-                  <Link
-                    href="/settings"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-emerald-50 text-emerald-900'}`}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-500 to-slate-600 flex items-center justify-center text-xl">⚙️</div>
-                    <div className="font-medium text-sm">Settings</div>
-                  </Link>
-                  {user ? (
-                    <button
-                      onClick={() => { handleLogout(); setSidebarOpen(false); }}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-red-900/30' : 'hover:bg-red-50'}`}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-xl">🚪</div>
-                      <div className="font-medium text-sm text-red-500">Logout</div>
-                    </button>
-                  ) : (
-                    <Link
-                      href="/login"
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-emerald-50 text-emerald-900'}`}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-xl">🔐</div>
-                      <div className="font-medium text-sm">Login / Signup</div>
-                    </Link>
-                  )}
-                </nav>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Top Navigation */}
-      <nav className={`sticky top-0 z-30 backdrop-blur-xl border-b safe-top ${isDark ? 'bg-gray-900/70 border-emerald-900' : 'bg-white/70 border-emerald-100'}`}>
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className={`p-3 rounded-lg transition-all ${isDark ? 'hover:bg-emerald-900/30 text-emerald-200' : 'hover:bg-emerald-50 text-emerald-800'}`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <Link href="/" className="flex items-center gap-2">
-              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 3, repeat: Infinity }} className="text-2xl">🌿</motion.div>
-              <span className={`text-lg sm:text-xl font-black tracking-tight ${isDark ? 'text-emerald-200' : 'text-emerald-900'}`}>
-                HomeCare<span className="text-emerald-500">AI</span>
-              </span>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <button
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className={`p-3 rounded-lg transition-all ${isDark ? 'bg-emerald-900/30 text-yellow-300 hover:bg-emerald-900/50' : 'bg-emerald-50 text-gray-700 hover:bg-emerald-100'}`}
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
-            {user ? (
-              <Link
-                href="/profile"
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium ${isDark ? 'bg-emerald-900/30 text-emerald-200' : 'bg-emerald-50 text-emerald-800'}`}
-              >
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
-                  {displayName?.charAt(0).toUpperCase()}
-                </div>
-                <span className="hidden sm:inline">{displayName}</span>
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-3 rounded-lg text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/50 transition-all"
-              >
-                🔐 Login
-              </Link>
-            )}
-          </div>
-        </div>
-      </nav>
+      {/* New Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Hero */}
-      <section className="relative pt-8 pb-4 px-4">
+      <section className="relative pt-24 pb-4 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -532,19 +376,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className={`relative z-10 py-8 px-4 mt-4 border-t ${isDark ? 'border-emerald-900' : 'border-emerald-100'}`}>
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="text-2xl">🌿</span>
-            <span className={`font-black tracking-tight ${isDark ? 'text-emerald-200' : 'text-emerald-900'}`}>
-              HomeCare<span className="text-emerald-500">AI</span>
-            </span>
-          </div>
-          <p className={`text-xs ${isDark ? 'text-emerald-400/50' : 'text-gray-500'}`}>
-            Made with 💚 • Not medical advice
-          </p>
-        </div>
-      </footer>
+      {/* New Footer */}
+      <Footer />
     </div>
   )
 }

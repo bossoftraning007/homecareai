@@ -5,7 +5,7 @@ from services.reminder_service import create_reminder, get_active_reminders, pro
 from services.auth_service import get_current_user
 from services.timeline_service import log_event
 
-router = APIRouter(prefix="/api/reminders", tags=["reminders"])
+router = APIRouter(tags=["reminders"])
 
 
 class ReminderRequest(BaseModel):
@@ -39,10 +39,8 @@ async def create_new_reminder(req: ReminderRequest, current_user: dict = Depends
         "message": req.message or "Time for your reminder!",
         "scheduled_time": req.scheduled_time,
         "is_active": True,
+        "days_of_week": req.days_of_week or [0, 1, 2, 3, 4, 5, 6],
     }
-
-    if req.days_of_week:
-        reminder["days_of_week"] = req.days_of_week
 
     result = supabase.table("reminders").insert(reminder).execute()
 
