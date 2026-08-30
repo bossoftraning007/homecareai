@@ -122,13 +122,54 @@ export default function LoginPage() {
           left: 0;
           bottom: 0;
           width: 50%;
-          background: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #06b6d4 100%);
+          background: linear-gradient(135deg, #065f46 0%, #047857 30%, #059669 60%, #10b981 100%);
           border-radius: 18px;
           transition: 0.65s ease-in-out;
+          overflow: hidden;
+        }
+
+        .login-card .card-bg::before {
+          content: "🌿";
+          position: absolute;
+          top: 20%;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 120px;
+          opacity: 0.15;
+          animation: float 6s ease-in-out infinite;
+        }
+
+        .login-card .card-bg::after {
+          content: "💚";
+          position: absolute;
+          bottom: 15%;
+          right: 20%;
+          font-size: 60px;
+          opacity: 0.1;
+          animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50% { transform: translateX(-50%) translateY(-20px); }
         }
 
         .login-card .card-bg.login {
           transform: translateX(100%);
+        }
+
+        .login-card .card-bg.login::before {
+          content: "🌱";
+          left: auto;
+          right: 30%;
+          top: 25%;
+        }
+
+        .login-card .card-bg.login::after {
+          content: "✨";
+          left: 25%;
+          right: auto;
+          bottom: 20%;
         }
 
         .login-card .hero,
@@ -425,9 +466,9 @@ export default function LoginPage() {
 
           {/* Register Hero Panel */}
           <div className={`hero register ${activeView === "register" ? "active" : ""}`}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>🌿</div>
+            <div style={{ fontSize: 64, marginBottom: 8, animation: "float 4s ease-in-out infinite" }}>🌿</div>
             <h2>Welcome Back!</h2>
-            <p>Login to continue your health journey and track your wellness progress.</p>
+            <p>Login to continue your health journey with AI-powered natural remedies.</p>
             <button type="button" onClick={toggleView}>
               LOGIN
             </button>
@@ -471,7 +512,7 @@ export default function LoginPage() {
 
           {/* Login Hero Panel */}
           <div className={`hero login ${activeView === "login" ? "active" : ""}`}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>💚</div>
+            <div style={{ fontSize: 64, marginBottom: 8, animation: "float 5s ease-in-out infinite" }}>💚</div>
             <h2>Hello There!</h2>
             <p>Start your natural healing journey with AI-powered home care guidance.</p>
             <button type="button" onClick={toggleView}>
