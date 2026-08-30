@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Providers } from './providers'
+import CollapsibleSidebar from '@/components/CollapsibleSidebar'
 
 export const metadata: Metadata = {
   title: 'HomeCare AI - Natural Home Remedies',
@@ -50,7 +51,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.svg" />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <CollapsibleSidebar />
+        <main className="md:ml-16 min-h-screen">
+          <Providers>{children}</Providers>
+        </main>
       </body>
     </html>
   )
