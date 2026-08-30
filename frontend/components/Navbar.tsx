@@ -41,6 +41,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const quickActions = [
     { icon: "💬", label: "Chat", href: "/chat" },
     { icon: "🌙", label: "Sleep & Mood", href: "/sleep-mood" },
+    { icon: "📊", label: "Reports", href: "/reports" },
     { icon: "📊", label: "Tracker", href: "/tracker" },
     { icon: "⏰", label: "Reminders", href: "/reminders" },
     { icon: "🚨", label: "Emergency", href: "/emergency" },
@@ -210,6 +211,14 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         }`}
                       >
                         <span>🌙</span> Sleep & Mood
+                      </Link>
+                      <Link
+                        href="/reports"
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm ${
+                          isDark ? "hover:bg-white/10 text-gray-200" : "hover:bg-black/5 text-gray-700"
+                        }`}
+                      >
+                        <span>📊</span> Health Reports
                       </Link>
                       <Link
                         href="/settings"
