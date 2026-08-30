@@ -19,6 +19,7 @@ type Message = {
   followups?: string[]
   related?: string[]
   suggestions?: string[]
+  prevention?: string
 }
 
 const features = [
@@ -243,6 +244,7 @@ export default function ChatPage() {
       let followups: string[] = []
       let related: string[] = []
       let suggestions: string[] = []
+      let prevention: string = ""
       let isEmergency = false
 
       if (res.body) {
@@ -288,6 +290,14 @@ export default function ChatPage() {
             continue
           }
 
+          if (chunk.includes('===PREVENTION||')) {
+            const match = chunk.match(/===PREVENTION\|(.*?)\|===/)
+            if (match) {
+              prevention = match[1]
+            }
+            continue
+          }
+
           if (chunk.includes('===LANG||')) {
             continue
           }
@@ -316,6 +326,7 @@ export default function ChatPage() {
         followups: followups.length ? followups : [],
         related: related.length ? related : [],
         suggestions: suggestions.length ? suggestions : [],
+        prevention: prevention || "",
       }
 
       setMessages(msgs => msgs.map(m => m.id === assistantMsg.id ? finalMsg : m))
@@ -882,6 +893,17 @@ export default function ChatPage() {
                             </motion.button>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {msg.prevention && (
+                      <div className={`mt-3 p-3 rounded-xl ${isDark ? 'bg-green-900/20 border border-green-800' : 'bg-green-50 border border-green-200'}`}>
+                        <p className={`text-xs font-medium mb-1 ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+                          🛡️ Prevention Tip
+                        </p>
+                        <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-800'}`}>
+                          {msg.prevention}
+                        </p>
                       </div>
                     )}
                   </div>
