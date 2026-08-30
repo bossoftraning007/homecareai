@@ -26,32 +26,15 @@ const footerLinks = {
     { label: "My Health Journey", href: "/journey" },
     { label: "Multilingual Support", href: "/chat" },
   ],
-  yourHomecare: [
-    { label: "Profile", href: "/profile" },
-    { label: "Favorites", href: "/favorites" },
-    { label: "Wellness Tracker", href: "/tracker" },
-    { label: "Recovery Plans", href: "/recovery" },
-    { label: "Reminders", href: "/reminders" },
-    { label: "Notifications", href: "/notifications" },
-    { label: "Settings", href: "/settings" },
-  ],
   supportSafety: [
     { label: "Emergency Information", href: "/emergency" },
-    { label: "Contact Us", href: "/contact" },
+    { label: "Safety Guidelines", href: "/safety" },
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
   ],
   company: [
     { label: "About Us", href: "/about" },
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
     { label: "Contact", href: "/contact" },
-  ],
-  account: [
-    { label: "Login", href: "/login" },
-    { label: "Create Account", href: "/login" },
-    { label: "My Profile", href: "/profile" },
-    { label: "Settings", href: "/settings" },
   ],
 };
 
@@ -103,7 +86,7 @@ export default function Footer() {
 
       {/* Main Footer Links */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
           {/* Product */}
           <div>
             <h4 className={`font-bold mb-4 text-sm ${isDark ? "text-white" : "text-gray-900"}`}>
@@ -195,27 +178,6 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5">
               {footerLinks.company.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className={`text-sm transition-colors ${
-                      isDark ? "text-gray-400 hover:text-emerald-400" : "text-gray-600 hover:text-emerald-600"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Account */}
-          <div>
-            <h4 className={`font-bold mb-4 text-sm ${isDark ? "text-white" : "text-gray-900"}`}>
-              Account
-            </h4>
-            <ul className="space-y-2.5">
-              {footerLinks.account.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
