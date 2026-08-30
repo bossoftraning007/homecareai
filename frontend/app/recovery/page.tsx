@@ -160,10 +160,13 @@ export default function RecoveryPage() {
         symptom: selectedSymptom,
         remedy: selectedRemedy,
         severity,
+      }, {
+        headers: getAuthHeaders(),
       })
       setPrediction(res.data)
-    } catch {
-      toast.error("Failed to generate prediction")
+    } catch (err: any) {
+      console.error("Prediction error:", err.response?.data || err.message)
+      toast.error(err.response?.data?.detail || "Failed to generate prediction")
     } finally {
       setLoading(false)
     }
@@ -193,8 +196,9 @@ export default function RecoveryPage() {
       setSelectedRemedy("")
       setSeverity(3)
       loadPlans()
-    } catch {
-      toast.error("Failed to create plan")
+    } catch (err: any) {
+      console.error("Create plan error:", err.response?.data || err.message)
+      toast.error(err.response?.data?.detail || "Failed to create plan")
     } finally {
       setLoading(false)
     }

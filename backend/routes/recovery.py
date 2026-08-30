@@ -57,8 +57,14 @@ async def create_new_plan(request: Request):
             "expected_completion": plan.expected_completion.isoformat() if plan.expected_completion else None,
         }
 
-        response = supabase.table("recovery_plans").insert(plan_data).select().single().execute()
-        plan_record = response.data
+        try:
+            response = supabase.table("recovery_plans").insert(plan_data).select().single().execute()
+            plan_record = response.data
+        except Exception as db_error:
+            error_msg = str(db_error)
+            if "relation" in error_msg and "does not exist" in error_msg:
+                raise HTTPException(status_code=500, detail="Database tables not found. Please run the recovery_twin_schema.sql in Supabase.")
+            raise HTTPException(status_code=500, detail=f"Database error: {error_msg}")
 
         # Save milestones
         milestones_data = []
@@ -73,17 +79,24 @@ async def create_new_plan(request: Request):
             })
 
         if milestones_data:
-            supabase.table("recovery_milestones").insert(milestones_data).execute()
+            try:
+                supabase.table("recovery_milestones").insert(milestones_data).execute()
+            except Exception as db_error:
+                # Don't fail if milestones can't be saved
+                print(f"Failed to save milestones: {db_error}")
 
         # Log timeline event
-        await log_event(
-            user_id=user_id,
-            event_type="recovery",
-            title=f"Recovery plan started: {plan.title}",
-            description=f"Remedy: {plan.remedy} | Severity: {plan.severity}/5",
-            icon="🧬",
-            metadata={"plan_id": plan_record["id"], "symptom": symptom, "remedy": remedy},
-        )
+        try:
+            await log_event(
+                user_id=user_id,
+                event_type="recovery",
+                title=f"Recovery plan started: {plan.title}",
+                description=f"Remedy: {plan.remedy} | Severity: {plan.severity}/5",
+                icon="🧬",
+                metadata={"plan_id": plan_record["id"], "symptom": symptom, "remedy": remedy},
+            )
+        except Exception as e:
+            print(f"Failed to log timeline event: {e}")
 
         return {
             "plan": plan_record,
