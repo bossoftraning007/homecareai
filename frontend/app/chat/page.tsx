@@ -328,7 +328,7 @@ export default function ChatPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user.access_token || ''}`,
+            'x-user-id': user.id,
           },
           body: JSON.stringify({
             event_type: 'chat',

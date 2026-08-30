@@ -97,6 +97,8 @@ export default function HomePage() {
     s.label.toLowerCase().includes(search.toLowerCase())
   )
 
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0]
+
   if (!mounted) return null
 
   return (

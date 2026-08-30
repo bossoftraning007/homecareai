@@ -1,11 +1,18 @@
 """Timeline API endpoints for My Health Journey."""
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from services.auth_service import get_current_user
 from config.database import get_supabase
 
 router = APIRouter()
+
+
+async def get_user_id(request: Request):
+    """Get user from x-user-id header."""
+    user_id = request.headers.get("x-user-id")
+    if user_id:
+        return {"id": user_id}
+    raise HTTPException(status_code=401, detail="Authentication required")
 
 
 class TimelineEventRequest(BaseModel):
@@ -17,23 +24,27 @@ class TimelineEventRequest(BaseModel):
 
 
 @router.get("/timeline")
-async def get_timeline(current_user: dict = Depends(get_current_user)):
+async def get_timeline(request: Request):
     """Get user's timeline events."""
     try:
+        current_user = await get_user_id(request)
         supabase = get_supabase()
         result = supabase.table("timeline_events").select("*").eq(
             "user_id", current_user["id"]
         ).order("event_date", ascending=False).limit(100).execute()
 
         return {"events": result.data or []}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/timeline")
-async def create_event(req: TimelineEventRequest, current_user: dict = Depends(get_current_user)):
+async def create_event(req: TimelineEventRequest, request: Request):
     """Create a new timeline event."""
     try:
+        current_user = await get_user_id(request)
         supabase = get_supabase()
         result = supabase.table("timeline_events").insert({
             "user_id": current_user["id"],
@@ -45,17 +56,19 @@ async def create_event(req: TimelineEventRequest, current_user: dict = Depends(g
         }).select().single().execute()
 
         return {"event": result.data}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/timeline/insights")
-async def get_insights(current_user: dict = Depends(get_current_user)):
+async def get_insights(request: Request):
     """Get AI-powered insights based on timeline data."""
     try:
+        current_user = await get_user_id(request)
         supabase = get_supabase()
 
-        # Get recent events (last 30 days)
         from datetime import datetime, timedelta
         month_ago = (datetime.utcnow() - timedelta(days=30)).isoformat()
 
@@ -73,13 +86,11 @@ async def get_insights(current_user: dict = Depends(get_current_user)):
                 "weekly_summary": {},
             }
 
-        # Count by type
         types = {}
         for event in event_list:
             t = event.get("event_type", "other")
             types[t] = types.get(t, 0) + 1
 
-        # Generate insights based on patterns
         total = len(event_list)
 
         if types.get("medication", 0) >= 5:
@@ -94,12 +105,10 @@ async def get_insights(current_user: dict = Depends(get_current_user)):
         if types.get("chat", 0) >= 10:
             insights.append("💬 You're actively using AI chat. Ask about related symptoms for more help!")
 
-        # Check for recent activity
         recent = [e for e in event_list if (datetime.utcnow() - datetime.fromisoformat(e["event_date"].replace("Z", "+00:00"))).days < 7]
         if len(recent) >= 5:
             insights.append("🔥 Active week! You've been taking care of your health.")
 
-        # Weekly summary
         weekly = {}
         for event in event_list:
             day = event["event_date"][:10]
@@ -114,14 +123,17 @@ async def get_insights(current_user: dict = Depends(get_current_user)):
             "weekly_summary": weekly,
             "by_type": types,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/timeline/weekly-story")
-async def get_weekly_story(current_user: dict = Depends(get_current_user)):
+async def get_weekly_story(request: Request):
     """Generate a weekly health story based on timeline events."""
     try:
+        current_user = await get_user_id(request)
         supabase = get_supabase()
         from datetime import datetime, timedelta
 
@@ -140,7 +152,6 @@ async def get_weekly_story(current_user: dict = Depends(get_current_user)):
                 "total_events": 0,
             }
 
-        # Group by day
         by_day = {}
         for event in event_list:
             day = datetime.fromisoformat(event["event_date"].replace("Z", "+00:00")).strftime("%A")
@@ -148,7 +159,6 @@ async def get_weekly_story(current_user: dict = Depends(get_current_user)):
                 by_day[day] = []
             by_day[day].append(event)
 
-        # Generate story
         story_parts = ["🌿 This Week in Your Health:\n"]
         highlights = []
 
@@ -169,5 +179,7 @@ async def get_weekly_story(current_user: dict = Depends(get_current_user)):
             "total_events": len(event_list),
             "days_active": len(by_day),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

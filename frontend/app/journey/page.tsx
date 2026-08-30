@@ -56,10 +56,12 @@ export default function HealthJourney() {
 
   const fetchTimeline = async () => {
     try {
+      const headers: Record<string, string> = {};
+      if (user) {
+        headers["x-user-id"] = user.id;
+      }
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/timeline`, {
-        headers: {
-          Authorization: `Bearer ${user?.access_token}`,
-        },
+        headers,
       });
       const data = await res.json();
       setEvents(data.events || []);
@@ -72,10 +74,12 @@ export default function HealthJourney() {
 
   const fetchInsights = async () => {
     try {
+      const headers: Record<string, string> = {};
+      if (user) {
+        headers["x-user-id"] = user.id;
+      }
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/timeline/insights`, {
-        headers: {
-          Authorization: `Bearer ${user?.access_token}`,
-        },
+        headers,
       });
       const data = await res.json();
       setInsights(data.insights || []);
@@ -86,10 +90,12 @@ export default function HealthJourney() {
 
   const fetchWeeklyStory = async () => {
     try {
+      const headers: Record<string, string> = {};
+      if (user) {
+        headers["x-user-id"] = user.id;
+      }
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/timeline/weekly-story`, {
-        headers: {
-          Authorization: `Bearer ${user?.access_token}`,
-        },
+        headers,
       });
       const data = await res.json();
       setWeeklyStory(data);
