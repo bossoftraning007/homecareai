@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -11,11 +12,24 @@ export default function ContactPage() {
   const isDark = theme === "dark";
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In production, this would send to a backend
-    setSubmitted(true);
+    setLoading(true);
+    
+    try {
+      await supabase.from("contact_messages").insert({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Failed to send message:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -118,7 +132,7 @@ export default function ContactPage() {
               </h3>
               <div className="space-y-4">
                 {[
-                  { icon: "📧", label: "Email", value: "support@homecareai.com" },
+                  { icon: "📧", label: "Email", value: "premcharantejtej@gmail.com" },
                   { icon: "🌐", label: "Website", value: "homecareai.vercel.app" },
                   { icon: "💬", label: "Response Time", value: "Within 24 hours" },
                 ].map((item) => (
