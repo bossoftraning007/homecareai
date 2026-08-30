@@ -12,12 +12,21 @@ from routes.reminders import router as reminders_router
 from routes.analytics import router as analytics_router
 from routes.recovery import router as recovery_router
 from routes.timeline import router as timeline_router
+from middleware.security import (
+    SECURITY_HEADERS,
+    CSP_POLICY,
+    rate_limiter,
+    hash_ip,
+)
 import time
+import os
 
 app = FastAPI(
     title="HomeCare AI",
     description="Safe home care guidance for minor symptoms",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url=None,  # Disable Swagger UI in production
+    redoc_url=None,  # Disable ReDoc in production
 )
 
 # CORS - restricted to known origins
@@ -34,34 +43,69 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "x-user-id", "x-csrf-token"],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining"],
 )
 
-# Simple rate limiting (in-memory)
-rate_limit_store = {}
 
+# Security headers middleware
 @app.middleware("http")
-async def rate_limiter(request: Request, call_next):
+async def security_headers(request: Request, call_next):
+    """Add security headers to all responses."""
+    response = await call_next(request)
+    
+    # Add security headers
+    for header, value in SECURITY_HEADERS.items():
+        response.headers[header] = value
+    
+    # Add Content Security Policy
+    response.headers["Content-Security-Policy"] = CSP_POLICY
+    
+    # Add Cache Control for sensitive pages
+    if request.url.path.startswith("/api/admin"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+    
+    return response
+
+
+# Enhanced rate limiting middleware
+@app.middleware("http")
+async def rate_limiter_middleware(request: Request, call_next):
+    """Enhanced rate limiting with IP blocking."""
     client_ip = request.client.host if request.client else "unknown"
-    now = time.time()
     
-    # Clean old entries
-    if client_ip in rate_limit_store:
-        rate_limit_store[client_ip] = [
-            t for t in rate_limit_store[client_ip] if now - t < 60
-        ]
-    else:
-        rate_limit_store[client_ip] = []
+    # Skip rate limiting for health checks
+    if request.url.path == "/":
+        return await call_next(request)
     
-    # Limit: 30 requests per minute per IP
-    if len(rate_limit_store.get(client_ip, [])) >= 30:
+    # Check rate limit
+    if not rate_limiter.check_rate_limit(client_ip):
+        # Log blocked IP (hashed for privacy)
+        hashed_ip = hash_ip(client_ip)
+        print(f"Rate limit exceeded for IP: {hashed_ip}")
+        
         return JSONResponse(
             status_code=429,
-            content={"error": "Too many requests. Please wait a moment."}
+            content={
+                "error": "Too many requests. Please wait a moment.",
+                "retry_after": 60,
+            },
+            headers={
+                "Retry-After": "60",
+                "X-RateLimit-Limit": "30",
+                "X-RateLimit-Remaining": "0",
+            },
         )
     
-    rate_limit_store[client_ip].append(now)
     response = await call_next(request)
+    
+    # Add rate limit info to response
+    response.headers["X-RateLimit-Limit"] = "30"
+    response.headers["X-RateLimit-Remaining"] = str(
+        max(0, 30 - len(rate_limiter.requests.get(client_ip, [])))
+    )
+    
     return response
 
 # Global exception handler - never leak internal errors

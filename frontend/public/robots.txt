@@ -1,0 +1,12 @@
+# robots.txt for HomeCare AI
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /login/
+
+# Sitemap
+Sitemap: https://homecareai.vercel.app/sitemap.xml
