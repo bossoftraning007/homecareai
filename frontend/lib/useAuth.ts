@@ -68,6 +68,32 @@ export function useAuth() {
     return { data, error }
   }
 
+  const signInWithFacebook = async () => {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: { message: 'Auth not configured' } as any }
+    }
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: `${window.location.origin}/chat`
+      }
+    })
+    return { data, error }
+  }
+
+  const signInWithTwitter = async () => {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: { message: 'Auth not configured' } as any }
+    }
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'twitter',
+      options: {
+        redirectTo: `${window.location.origin}/chat`
+      }
+    })
+    return { data, error }
+  }
+
   const signOut = async () => {
     if (!isSupabaseConfigured()) {
       return { error: null }
@@ -82,6 +108,8 @@ export function useAuth() {
     signIn,
     signUp,
     signInWithGoogle,
+    signInWithFacebook,
+    signInWithTwitter,
     signOut,
   }
 }
