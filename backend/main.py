@@ -12,6 +12,7 @@ from routes.reminders import router as reminders_router
 from routes.analytics import router as analytics_router
 from routes.recovery import router as recovery_router
 from routes.timeline import router as timeline_router
+from routes.wellness import router as wellness_router
 from middleware.security import (
     SECURITY_HEADERS,
     CSP_POLICY,
@@ -127,6 +128,7 @@ app.include_router(reminders_router, prefix="/api")
 app.include_router(analytics_router, prefix="/api")
 app.include_router(recovery_router, prefix="/api/recovery")
 app.include_router(timeline_router, prefix="/api")
+app.include_router(wellness_router, prefix="/api")
 
 @app.get("/")
 def root():
