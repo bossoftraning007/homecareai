@@ -18,6 +18,7 @@ type Message = {
   timestamp?: string
   followups?: string[]
   related?: string[]
+  suggestions?: string[]
 }
 
 const features = [
@@ -141,6 +142,7 @@ export default function ChatPage() {
           timestamp: m.created_at,
           followups: m.followups || [],
           related: m.related || [],
+          suggestions: m.suggestions || [],
         })))
       } else {
         setDefaultGreeting()
@@ -240,6 +242,7 @@ export default function ChatPage() {
       let fullContent = ''
       let followups: string[] = []
       let related: string[] = []
+      let suggestions: string[] = []
       let isEmergency = false
 
       if (res.body) {
@@ -277,6 +280,14 @@ export default function ChatPage() {
             continue
           }
 
+          if (chunk.includes('===SUGGESTIONS||')) {
+            const match = chunk.match(/===SUGGESTIONS\|(.*?)\|===/)
+            if (match) {
+              try { suggestions = JSON.parse(match[1]) } catch {}
+            }
+            continue
+          }
+
           if (chunk.includes('===LANG||')) {
             continue
           }
@@ -304,6 +315,7 @@ export default function ChatPage() {
         timestamp: new Date().toISOString(),
         followups: followups.length ? followups : [],
         related: related.length ? related : [],
+        suggestions: suggestions.length ? suggestions : [],
       }
 
       setMessages(msgs => msgs.map(m => m.id === assistantMsg.id ? finalMsg : m))
@@ -317,6 +329,7 @@ export default function ChatPage() {
           is_emergency: isEmergency,
           followups: followups.length ? followups : [],
           related: related.length ? related : [],
+          suggestions: suggestions.length ? suggestions : [],
         })
       }
 
@@ -843,6 +856,32 @@ export default function ChatPage() {
                             🔗 {r}
                           </button>
                         ))}
+                      </div>
+                    )}
+
+                    {msg.suggestions && msg.suggestions.length > 0 && (
+                      <div className="mt-3">
+                        <p className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          You might also want to know:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {msg.suggestions.map((s, j) => (
+                            <motion.button
+                              key={`suggestion-${i}-${j}`}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: j * 0.1 }}
+                              onClick={() => handleFollowup(`I have ${s}`)}
+                              className={`text-xs px-3 py-1.5 rounded-full border
+                                         transition-all duration-200 cursor-pointer
+                                         ${isDark
+                                           ? 'bg-purple-900/30 border-purple-700 text-purple-300 hover:bg-purple-900/50'
+                                           : 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'}`}
+                            >
+                              ✨ {s}
+                            </motion.button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

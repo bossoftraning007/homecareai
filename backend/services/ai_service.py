@@ -62,6 +62,10 @@ Format: one question per line, no numbers, no bullets.
 2-3 related symptoms/conditions user should know about (each max 5 words).
 Format: one per line, no numbers, no bullets.
 
+===SUGGESTIONS===
+2-3 related symptoms as comma-separated values.
+Format: Symptom1, Symptom2, Symptom3
+
 Example format:
 [Your main response here...]
 
@@ -74,6 +78,9 @@ Can children take this remedy?
 Sore throat
 Sinus infection
 Body aches
+
+===SUGGESTIONS===
+Sore Throat, Headache, Fever
 """
     return enhanced_prompt, detected_lang
 
@@ -144,9 +151,11 @@ def get_ai_response_stream(messages: list):
             result = parse_ai_response(full_content)
             followups_json = json.dumps(result.get("followups", []))
             related_json = json.dumps(result.get("related", []))
+            suggestions_json = json.dumps(result.get("suggestions", []))
 
             yield f"\n===FOLLOWUPS||{followups_json}===\n"
             yield f"\n===RELATED||{related_json}===\n"
+            yield f"\n===SUGGESTIONS||{suggestions_json}===\n"
             yield f"\n===LANG||{detected_lang}===\n"
 
             return
@@ -168,6 +177,7 @@ def parse_ai_response(content: str) -> dict:
     """Parse AI response to extract main message, followups, and related symptoms."""
     followups = []
     related = []
+    suggestions = []
     main_content = content
 
     if "===FOLLOWUPS===" in content:
@@ -176,17 +186,32 @@ def parse_ai_response(content: str) -> dict:
         rest = parts[1] if len(parts) > 1 else ""
 
         if "===RELATED===" in rest:
-            fp_part, rel_part = rest.split("===RELATED===")
+            fp_part, rest_after_related = rest.split("===RELATED===")
             followups = [
                 line.strip()
                 for line in fp_part.strip().split("\n")
                 if line.strip() and not line.startswith("===")
             ][:3]
-            related = [
-                line.strip()
-                for line in rel_part.strip().split("\n")
-                if line.strip() and not line.startswith("===")
-            ][:3]
+            
+            if "===SUGGESTIONS===" in rest_after_related:
+                rel_part, sug_part = rest_after_related.split("===SUGGESTIONS===")
+                related = [
+                    line.strip()
+                    for line in rel_part.strip().split("\n")
+                    if line.strip() and not line.startswith("===")
+                ][:3]
+                # Parse comma-separated suggestions
+                suggestions = [
+                    s.strip()
+                    for s in sug_part.strip().split(",")
+                    if s.strip()
+                ][:3]
+            else:
+                related = [
+                    line.strip()
+                    for line in rest_after_related.strip().split("\n")
+                    if line.strip() and not line.startswith("===")
+                ][:3]
         else:
             followups = [
                 line.strip()
@@ -198,4 +223,5 @@ def parse_ai_response(content: str) -> dict:
         "reply": main_content,
         "followups": followups,
         "related": related,
+        "suggestions": suggestions,
     }
