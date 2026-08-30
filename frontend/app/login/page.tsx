@@ -2,37 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
-import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/useAuth";
-import Link from "next/link";
-
-const features = [
-  { icon: "💬", text: "AI-powered health chat" },
-  { icon: "🌿", text: "Natural home remedies" },
-  { icon: "📊", text: "Track your wellness" },
-  { icon: "🧬", text: "Recovery predictions" },
-];
 
 export default function LoginPage() {
   const router = useRouter();
-  const { theme } = useTheme();
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
   const [mounted, setMounted] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [activeView, setActiveView] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  const isDark = theme === "dark";
 
   useEffect(() => {
     setMounted(true);
     if (user) router.push("/chat");
   }, [user, router]);
+
+  const toggleView = () => {
+    setActiveView(activeView === "login" ? "register" : "login");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +33,7 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    if (mode === "signup") {
+    if (activeView === "register") {
       if (!fullName) {
         toast.error("Please enter your name!");
         setLoading(false);
@@ -69,7 +59,8 @@ export default function LoginPage() {
             }),
           });
         } catch {}
-        setMode("login");
+        setActiveView("login");
+        setPassword("");
       }
     } else {
       const { error } = await signIn(email, password);
@@ -96,281 +87,436 @@ export default function LoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen flex relative overflow-hidden">
+    <>
+      <style>{`
+        .login-card-container * {
+          box-sizing: border-box;
+        }
+
+        .login-card-container {
+          margin: 0;
+          height: 100vh;
+          display: grid;
+          place-items: center;
+          overflow: hidden;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .login-card {
+          position: relative;
+          overflow: hidden;
+          width: 700px;
+          max-width: 95vw;
+          height: 480px;
+          border-radius: 24px;
+          background: #ffffff;
+          border: 8px solid #ffffff;
+          box-shadow: 0 20px 80px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-card .card-bg {
+          position: absolute;
+          z-index: 2;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: 50%;
+          background: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #06b6d4 100%);
+          border-radius: 18px;
+          transition: 0.65s ease-in-out;
+        }
+
+        .login-card .card-bg.login {
+          transform: translateX(100%);
+        }
+
+        .login-card .hero,
+        .login-card .form {
+          position: absolute;
+          width: 50%;
+          height: 100%;
+          opacity: 0;
+          visibility: hidden;
+          transition: 0.65s ease-in-out;
+        }
+
+        .login-card .hero.active,
+        .login-card .form.active {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .login-card .form.register {
+          left: 50%;
+        }
+
+        .login-card .hero.login {
+          left: 50%;
+          transform: translateX(100%);
+        }
+
+        .login-card .hero.login.active {
+          transform: translateX(0);
+        }
+
+        .login-card .hero.register {
+          transform: translateX(-100%);
+        }
+
+        .login-card .hero.register.active {
+          transform: translateX(0);
+        }
+
+        .login-card .hero {
+          z-index: 3;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          color: #ffffff;
+          text-align: center;
+          padding: 0 32px;
+        }
+
+        .login-card .hero h2 {
+          margin: 0;
+          font-size: 28px;
+          font-weight: 600;
+        }
+
+        .login-card .hero p {
+          margin: 0;
+          opacity: 0.9;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+
+        .login-card .hero button {
+          padding: 14px 44px;
+          border-radius: 32px;
+          letter-spacing: 1.5px;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          color: inherit;
+          border: 2px solid #ffffff;
+          background: transparent;
+          transition: 0.3s;
+          cursor: pointer;
+          margin-top: 8px;
+        }
+
+        .login-card .hero button:hover {
+          color: #10b981;
+          background: #ffffff;
+        }
+
+        .login-card .form {
+          background: #ffffff;
+          z-index: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 14px;
+          padding: 36px;
+        }
+
+        .login-card .form h2 {
+          font-size: 24px;
+          color: #1f2937;
+          margin: 0 0 8px;
+          text-align: center;
+        }
+
+        .login-card .form form {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+          width: 100%;
+        }
+
+        .login-card .form input {
+          font-family: inherit;
+          border-radius: 12px;
+          border: 0;
+          background: #f3f4f6;
+          padding: 14px 16px;
+          color: #1f2937;
+          width: 100%;
+          font-size: 14px;
+          transition: 0.2s;
+        }
+
+        .login-card .form input:focus {
+          outline: none;
+          background: #e5e7eb;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .login-card .form input::placeholder {
+          color: #9ca3af;
+        }
+
+        .login-card .form button[type="submit"] {
+          border: 0;
+          padding: 14px 0;
+          border-radius: 32px;
+          font-family: inherit;
+          letter-spacing: 1.5px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #ffffff;
+          width: 160px;
+          margin-top: 8px;
+          background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        .login-card .form button[type="submit"]:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .login-card .form button[type="submit"]:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .login-card .sso {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+        }
+
+        .login-card .sso a {
+          display: grid;
+          place-items: center;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: #f3f4f6;
+          font-size: 18px;
+          cursor: pointer;
+          transition: 0.2s;
+          text-decoration: none;
+        }
+
+        .login-card .sso a:hover {
+          background: #e5e7eb;
+          transform: translateY(-2px);
+        }
+
+        .login-card .form p {
+          margin: 0;
+          text-align: center;
+          opacity: 0.5;
+          font-size: 12px;
+          color: #6b7280;
+        }
+
+        .login-card .form .forgot-link {
+          font-size: 13px;
+          color: #10b981;
+          text-decoration: none;
+          opacity: 0.8;
+          transition: 0.2s;
+        }
+
+        .login-card .form .forgot-link:hover {
+          opacity: 1;
+        }
+
+        .login-card .divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          color: #9ca3af;
+          font-size: 12px;
+        }
+
+        .login-card .divider::before,
+        .login-card .divider::after {
+          content: "";
+          flex: 1;
+          height: 1px;
+          background: #e5e7eb;
+        }
+
+        .google-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
+          padding: 12px;
+          border-radius: 12px;
+          border: 2px solid #e5e7eb;
+          background: #ffffff;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 500;
+          color: #374151;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+
+        .google-btn:hover {
+          background: #f9fafb;
+          border-color: #d1d5db;
+        }
+
+        .guest-link {
+          position: absolute;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 13px;
+          color: #6b7280;
+          text-decoration: none;
+          opacity: 0.7;
+          transition: 0.2s;
+        }
+
+        .guest-link:hover {
+          opacity: 1;
+          color: #10b981;
+        }
+
+        @media (max-width: 640px) {
+          .login-card {
+            height: auto;
+            min-height: 500px;
+          }
+
+          .login-card .card-bg {
+            display: none;
+          }
+
+          .login-card .hero {
+            display: none;
+          }
+
+          .login-card .form {
+            width: 100%;
+            left: 0 !important;
+          }
+
+          .login-card .form.register,
+          .login-card .form.login {
+            transform: translateX(0) !important;
+          }
+        }
+      `}</style>
+
       <Toaster position="top-center" />
 
-      {/* Left Side - Branding (Desktop) */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-12 flex-col justify-between">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div
-            animate={{ y: [0, -30, 0], rotate: [0, 10, 0] }}
-            transition={{ duration: 8, repeat: Infinity }}
-            className="absolute top-20 left-20 text-8xl opacity-20"
-          >
-            🌿
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, -20, 0], rotate: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-            className="absolute top-40 right-20 text-7xl opacity-20"
-          >
-            🍃
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, -25, 0], rotate: [0, 15, 0] }}
-            transition={{ duration: 7, repeat: Infinity, delay: 2 }}
-            className="absolute bottom-32 left-32 text-8xl opacity-20"
-          >
-            🌱
-          </motion.div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent)]" />
-        </div>
+      <div className="login-card-container">
+        <div className="login-card">
+          {/* Animated Background */}
+          <div className={`card-bg ${activeView === "login" ? "login" : ""}`} />
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-3">
-            <motion.span
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="text-5xl"
-            >
-              🌿
-            </motion.span>
-            <span className="text-4xl font-black text-white tracking-tight">
-              HomeCare<span className="text-emerald-200">AI</span>
-            </span>
-          </Link>
-        </div>
-
-        {/* Features */}
-        <div className="relative z-10 space-y-6">
-          <h2 className="text-3xl font-bold text-white leading-tight">
-            Your AI-powered
-            <br />
-            health companion
-          </h2>
-          <div className="space-y-4">
-            {features.map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className="flex items-center gap-4 text-white/90"
-              >
-                <span className="text-2xl">{feature.icon}</span>
-                <span className="text-lg">{feature.text}</span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom */}
-        <div className="relative z-10 text-white/60 text-sm">
-          Made with 💚 for better health
-        </div>
-      </div>
-
-      {/* Right Side - Form */}
-      <div className={`flex-1 flex items-center justify-center p-6 ${
-        isDark ? "bg-gray-900" : "bg-gray-50"
-      }`}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`w-full max-w-md p-8 rounded-3xl shadow-2xl ${
-            isDark ? "bg-gray-800" : "bg-white"
-          }`}
-        >
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <motion.span
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="text-4xl"
-              >
-                🌿
-              </motion.span>
-              <span className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
-                HomeCare<span className="text-emerald-500">AI</span>
-              </span>
-            </Link>
-          </div>
-
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-              {mode === "login" ? "Welcome back!" : "Create account"}
-            </h1>
-            <p className={`mt-2 text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              {mode === "login"
-                ? "Sign in to continue your health journey"
-                : "Start your natural healing journey"}
-            </p>
-          </div>
-
-          {/* Mode Toggle */}
-          <div className={`flex p-1 rounded-xl mb-6 ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
-            <button
-              onClick={() => setMode("login")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "login"
-                  ? "bg-emerald-500 text-white shadow-lg"
-                  : isDark
-                  ? "text-gray-400"
-                  : "text-gray-500"
-              }`}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => setMode("signup")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "signup"
-                  ? "bg-emerald-500 text-white shadow-lg"
-                  : isDark
-                  ? "text-gray-400"
-                  : "text-gray-500"
-              }`}
-            >
-              Sign Up
+          {/* Register Hero Panel */}
+          <div className={`hero register ${activeView === "register" ? "active" : ""}`}>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>🌿</div>
+            <h2>Welcome Back!</h2>
+            <p>Login to continue your health journey and track your wellness progress.</p>
+            <button type="button" onClick={toggleView}>
+              LOGIN
             </button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <AnimatePresence mode="wait">
-              {mode === "signup" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="John Doe"
-                    className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${
-                      isDark
-                        ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:border-emerald-500"
-                        : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500"
-                    }`}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                Email
-              </label>
+          {/* Register Form */}
+          <div className={`form register ${activeView === "register" ? "active" : ""}`}>
+            <div style={{ fontSize: 36, marginBottom: 4 }}>🌱</div>
+            <h2>Create Account</h2>
+            <div className="sso">
+              <a onClick={handleGoogleLogin} title="Sign up with Google">🌐</a>
+              <a title="Sign up with Facebook">📘</a>
+              <a title="Sign up with Twitter">🐦</a>
+            </div>
+            <div className="divider">or use your email</div>
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Full Name"
+              />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${
-                  isDark
-                    ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:border-emerald-500"
-                    : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500"
-                }`}
+                placeholder="Email Address"
               />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min 6 characters"
-                  minLength={6}
-                  className={`w-full px-4 py-3 pr-12 rounded-xl border text-sm outline-none transition-all ${
-                    isDark
-                      ? "bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:border-emerald-500"
-                      : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 ${
-                    isDark ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {showPassword ? "🙈" : "👁️"}
-                </button>
-              </div>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 disabled:opacity-50 transition-all"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Please wait...
-                </span>
-              ) : mode === "login" ? (
-                "🔐 Sign In"
-              ) : (
-                "🌱 Create Account"
-              )}
-            </motion.button>
-          </form>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center gap-3">
-            <div className={`flex-1 h-px ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
-            <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>OR</span>
-            <div className={`flex-1 h-px ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password (min 6 chars)"
+                minLength={6}
+              />
+              <button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "SIGN UP"}
+              </button>
+            </form>
           </div>
 
-          {/* Google Login */}
-          <button
-            onClick={handleGoogleLogin}
-            className={`w-full py-3 rounded-xl border font-medium flex items-center justify-center gap-3 transition-all ${
-              isDark
-                ? "border-gray-600 text-gray-200 hover:bg-gray-700"
-                : "border-gray-200 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-            </svg>
-            Continue with Google
-          </button>
-
-          {/* Guest Link */}
-          <div className="text-center mt-6">
-            <Link
-              href="/"
-              className={`text-sm ${isDark ? "text-gray-400 hover:text-emerald-400" : "text-gray-500 hover:text-emerald-600"} transition-colors`}
-            >
-              ← Continue as guest
-            </Link>
+          {/* Login Hero Panel */}
+          <div className={`hero login ${activeView === "login" ? "active" : ""}`}>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>💚</div>
+            <h2>Hello There!</h2>
+            <p>Start your natural healing journey with AI-powered home care guidance.</p>
+            <button type="button" onClick={toggleView}>
+              SIGN UP
+            </button>
           </div>
-        </motion.div>
+
+          {/* Login Form */}
+          <div className={`form login ${activeView === "login" ? "active" : ""}`}>
+            <div style={{ fontSize: 36, marginBottom: 4 }}>🌿</div>
+            <h2>Welcome Back</h2>
+            <div className="sso">
+              <a onClick={handleGoogleLogin} title="Login with Google">🌐</a>
+              <a title="Login with Facebook">📘</a>
+              <a title="Login with Twitter">🐦</a>
+            </div>
+            <div className="divider">or use your email</div>
+            <form onSubmit={handleSubmit}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email Address"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+              />
+              <a className="forgot-link" href="#">
+                Forgot password?
+              </a>
+              <button type="submit" disabled={loading}>
+                {loading ? "Logging in..." : "LOGIN"}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Guest Link */}
+        <a className="guest-link" href="/">
+          ← Continue as guest
+        </a>
       </div>
-    </div>
+    </>
   );
 }
