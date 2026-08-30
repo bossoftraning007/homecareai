@@ -129,27 +129,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Your HomeCare */}
-          <div>
-            <h4 className={`font-bold mb-4 text-sm ${isDark ? "text-white" : "text-gray-900"}`}>
-              Your HomeCare
-            </h4>
-            <ul className="space-y-2.5">
-              {footerLinks.yourHomecare.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className={`text-sm transition-colors ${
-                      isDark ? "text-gray-400 hover:text-emerald-400" : "text-gray-600 hover:text-emerald-600"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Support & Safety */}
           <div>
             <h4 className={`font-bold mb-4 text-sm ${isDark ? "text-white" : "text-gray-900"}`}>
