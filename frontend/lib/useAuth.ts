@@ -62,9 +62,12 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/chat`
-      }
+        redirectTo: `${window.location.origin}/chat`,
+      },
     })
+    if (data?.url) {
+      window.location.href = data.url
+    }
     return { data, error }
   }
 
@@ -75,9 +78,12 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: {
-        redirectTo: `${window.location.origin}/chat`
-      }
+        redirectTo: `${window.location.origin}/chat`,
+      },
     })
+    if (data?.url) {
+      window.location.href = data.url
+    }
     return { data, error }
   }
 
@@ -88,9 +94,12 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'twitter',
       options: {
-        redirectTo: `${window.location.origin}/chat`
-      }
+        redirectTo: `${window.location.origin}/chat`,
+      },
     })
+    if (data?.url) {
+      window.location.href = data.url
+    }
     return { data, error }
   }
 
