@@ -39,10 +39,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   const quickActions = [
+    { icon: "🏠", label: "Home", href: "/dashboard" },
     { icon: "💬", label: "Chat", href: "/chat" },
     { icon: "🌙", label: "Sleep & Mood", href: "/sleep-mood" },
     { icon: "📊", label: "Reports", href: "/reports" },
-    { icon: "📊", label: "Tracker", href: "/tracker" },
     { icon: "⏰", label: "Reminders", href: "/reminders" },
     { icon: "🚨", label: "Emergency", href: "/emergency" },
   ];
