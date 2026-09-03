@@ -45,7 +45,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     { icon: "📚", label: "Library", href: "/library" },
     { icon: "⏰", label: "Reminders", href: "/reminders" },
     { icon: "🚨", label: "Emergency", href: "/emergency" },
-  ];
+  ]
+
+  const ADMIN_EMAILS = ["bossoftraning007@gmail.com"]
+  const isAdminUser = user && ADMIN_EMAILS.includes(user.email?.toLowerCase() || "");
 
   if (!mounted) return null;
 
@@ -197,13 +200,23 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         <span>👤</span> Profile
                       </Link>
                       <Link
-                        href="/journey"
+                        href="/library"
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm ${
                           isDark ? "hover:bg-white/10 text-gray-200" : "hover:bg-black/5 text-gray-700"
                         }`}
                       >
-                        <span>🌿</span> Health Journey
+                        <span>📚</span> Library
                       </Link>
+                      {isAdminUser && (
+                        <Link
+                          href="/manage-content"
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm ${
+                            isDark ? "hover:bg-white/10 text-emerald-300" : "hover:bg-black/5 text-emerald-700"
+                          }`}
+                        >
+                          <span>⚙️</span> Content Manager
+                        </Link>
+                      )}
                       <Link
                         href="/sleep-mood"
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm ${
