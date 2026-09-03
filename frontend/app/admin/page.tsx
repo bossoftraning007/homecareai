@@ -42,7 +42,7 @@ type SOSAlert = {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -84,8 +84,13 @@ export default function AdminDashboard() {
   // Wait for user, then check admin
   useEffect(() => {
     if (!mounted) return
-    if (!user) return // wait
+    // Wait for auth to finish loading
+    if (authLoading) return
     setAdminChecked(true)
+    if (!user) {
+      setIsAllowedAdmin(false)
+      return
+    }
     const ADMIN_EMAILS = [
       'bossoftraning007@gmail.com',
       'premcharantejtej@gmail.com',
@@ -97,7 +102,7 @@ export default function AdminDashboard() {
       setIsAllowedAdmin(true)
       loadAllData()
     }
-  }, [mounted, user])
+  }, [mounted, user, authLoading])
 
   const loadAllData = async () => {
     setLoading(true)
