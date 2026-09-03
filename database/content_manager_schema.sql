@@ -25,9 +25,11 @@ CREATE TABLE IF NOT EXISTS admin_users (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Insert default admin (your email)
+-- Insert default admins (your accounts)
 INSERT INTO admin_users (email, role) VALUES
-  ('bossoftraning007@gmail.com', 'admin')
+  ('bossoftraning007@gmail.com', 'admin'),
+  ('premcharantejtej@gmail.com', 'admin'),
+  ('tejpersonal007@gmail.com', 'admin')
 ON CONFLICT (email) DO NOTHING;
 
 -- Article drafts (for work-in-progress)

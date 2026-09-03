@@ -23,7 +23,11 @@ type Article = {
   updated_at: string
 }
 
-const ADMIN_EMAILS = ['bossoftraning007@gmail.com']
+const ADMIN_EMAILS = [
+  'bossoftraning007@gmail.com',
+  'premcharantejtej@gmail.com',
+  'tejpersonal007@gmail.com',
+]
 
 const CATEGORIES = [
   { key: 'nutrition', label: 'Nutrition', icon: '🍎' },

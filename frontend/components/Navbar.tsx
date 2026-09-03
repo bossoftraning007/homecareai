@@ -47,7 +47,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     { icon: "🚨", label: "Emergency", href: "/emergency" },
   ]
 
-  const ADMIN_EMAILS = ["bossoftraning007@gmail.com"]
+  const ADMIN_EMAILS = [
+    "bossoftraning007@gmail.com",
+    "premcharantejtej@gmail.com",
+    "tejpersonal007@gmail.com",
+  ]
   const isAdminUser = user && ADMIN_EMAILS.includes(user.email?.toLowerCase() || "");
 
   if (!mounted) return null;
