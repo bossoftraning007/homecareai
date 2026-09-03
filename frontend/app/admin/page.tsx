@@ -5,7 +5,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
-type AdminTab = 'overview' | 'symptoms' | 'ai-logs' | 'users' | 'emergency' | 'broadcast' | 'analytics' | 'settings'
+type AdminTab = 'overview' | 'symptoms' | 'ai-logs' | 'users' | 'emergency' | 'broadcast' | 'analytics' | 'settings' | 'content'
 
 type SymptomEntry = {
   id: string
@@ -47,6 +47,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [adminChecked, setAdminChecked] = useState(false)
+  const [isAllowedAdmin, setIsAllowedAdmin] = useState(false)
 
   const [symptoms, setSymptoms] = useState<SymptomEntry[]>([])
   const [chatLogs, setChatLogs] = useState<ChatLog[]>([])
@@ -77,8 +79,25 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setMounted(true)
-    loadAllData()
   }, [])
+
+  // Wait for user, then check admin
+  useEffect(() => {
+    if (!mounted) return
+    if (!user) return // wait
+    setAdminChecked(true)
+    const ADMIN_EMAILS = [
+      'bossoftraning007@gmail.com',
+      'premcharantejtej@gmail.com',
+      'tejpersonal007@gmail.com',
+    ]
+    if (!ADMIN_EMAILS.includes((user.email || '').toLowerCase())) {
+      setIsAllowedAdmin(false)
+    } else {
+      setIsAllowedAdmin(true)
+      loadAllData()
+    }
+  }, [mounted, user])
 
   const loadAllData = async () => {
     setLoading(true)
@@ -420,7 +439,47 @@ export default function AdminDashboard() {
     setShowSymptomForm(true)
   }
 
-  if (!mounted) return null
+  if (!mounted || (!adminChecked && user)) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-3xl mb-2">🔒</div>
+          <p className="text-gray-500 text-sm">Verifying access...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (mounted && !user) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-3">🔒</div>
+          <h1 className="text-2xl font-bold text-white mb-2">Admin Access</h1>
+          <p className="text-gray-400 mb-4">Please login to continue.</p>
+          <a href="/login" className="inline-block bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold">
+            Login
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  if (mounted && adminChecked && !isAllowedAdmin) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-3">🚫</div>
+          <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+          <p className="text-gray-400 mb-1">This area is restricted to administrators.</p>
+          <p className="text-gray-600 text-xs mb-4">No further details available.</p>
+          <a href="/dashboard" className="inline-block bg-gray-800 text-white px-6 py-3 rounded-xl font-bold">
+            ← Back
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const navItems: { id: AdminTab; label: string; icon: string }[] = [
     { id: 'overview', label: 'Overview', icon: 'D' },
@@ -430,6 +489,7 @@ export default function AdminDashboard() {
     { id: 'emergency', label: 'Emergency', icon: 'E' },
     { id: 'broadcast', label: 'Broadcast', icon: 'B' },
     { id: 'analytics', label: 'Analytics', icon: 'G' },
+    { id: 'content', label: 'Content Manager', icon: 'C' },
     { id: 'settings', label: 'Settings', icon: 'T' },
   ]
 
@@ -965,6 +1025,28 @@ export default function AdminDashboard() {
                       <p className="text-xs text-gray-500">Queries processed today</p>
                     </div>
                   </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'content' && (
+                <motion.div
+                  key="content"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-center py-12"
+                >
+                  <div className="text-4xl mb-3">⚙️</div>
+                  <h2 className="text-xl font-bold mb-2">Content Manager</h2>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Manage your Health Library articles
+                  </p>
+                  <a
+                    href="/manage-content"
+                    className="inline-block bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-bold"
+                  >
+                    Open Content Manager →
+                  </a>
                 </motion.div>
               )}
 
