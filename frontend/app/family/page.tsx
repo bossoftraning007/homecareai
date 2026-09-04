@@ -46,6 +46,7 @@ export default function FamilyPage() {
 
   async function loadFamily() {
     try {
+      if (!user) return
       setLoading(true)
       const { data } = await axios.get(`${API_URL}/api/family/war-room`, {
         headers: { "x-user-id": user.id },
@@ -229,6 +230,7 @@ function MemberCard({ member, onDelete }: any) {
 
   async function handleDelete() {
     if (!confirm(`Remove ${member.full_name}?`)) return
+    if (!user) return
     try {
       await axios.delete(`${API_URL}/api/family/${member.id}`, {
         headers: { "x-user-id": user.id },
@@ -301,6 +303,7 @@ function AddMemberModal({ onClose, onAdded }: any) {
       toast.error("Name required")
       return
     }
+    if (!user) return
     setSaving(true)
     try {
       await axios.post(`${API_URL}/api/family`, {
