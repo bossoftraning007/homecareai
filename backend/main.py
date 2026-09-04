@@ -18,6 +18,7 @@ from routes.dashboard import router as dashboard_router
 from routes.articles_admin import router as articles_admin_router
 from routes.health_twin import router as health_twin_router
 from routes.kitchen_remedies import router as kitchen_remedies_router
+from routes.symptom_timeline import router as symptom_timeline_router
 from middleware.security import (
     SECURITY_HEADERS,
     CSP_POLICY,
@@ -139,6 +140,7 @@ app.include_router(dashboard_router, prefix="/api")
 app.include_router(articles_admin_router, prefix="/api")
 app.include_router(health_twin_router, prefix="/api")
 app.include_router(kitchen_remedies_router, prefix="/api")
+app.include_router(symptom_timeline_router, prefix="/api")
 
 @app.get("/")
 def root():

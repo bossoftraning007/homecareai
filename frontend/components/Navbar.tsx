@@ -41,9 +41,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const quickActions = [
     { icon: "🏠", label: "Home", href: "/dashboard" },
     { icon: "💬", label: "Chat", href: "/chat" },
+    { icon: "🔍", label: "Symptom", href: "/symptom-timeline" },
     { icon: "🌿", label: "Kitchen", href: "/kitchen" },
-    { icon: "🧬", label: "Health Twin", href: "/health-twin" },
-    { icon: "📚", label: "Library", href: "/library" },
+    { icon: "🧬", label: "Twin", href: "/health-twin" },
     { icon: "🚨", label: "Emergency", href: "/emergency" },
   ]
 
