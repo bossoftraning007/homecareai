@@ -42,6 +42,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     { icon: "🏠", label: "Home", href: "/dashboard" },
     { icon: "💬", label: "Chat", href: "/chat" },
     { icon: "🔍", label: "Symptom", href: "/symptom-timeline" },
+    { icon: "👨‍👩‍👧", label: "Family", href: "/family" },
     { icon: "🌿", label: "Kitchen", href: "/kitchen" },
     { icon: "🧬", label: "Twin", href: "/health-twin" },
     { icon: "🚨", label: "Emergency", href: "/emergency" },
