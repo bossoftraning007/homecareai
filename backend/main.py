@@ -16,6 +16,7 @@ from routes.wellness import router as wellness_router
 from routes.reports import router as reports_router
 from routes.dashboard import router as dashboard_router
 from routes.articles_admin import router as articles_admin_router
+from routes.health_twin import router as health_twin_router
 from middleware.security import (
     SECURITY_HEADERS,
     CSP_POLICY,
@@ -135,6 +136,7 @@ app.include_router(wellness_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(articles_admin_router, prefix="/api")
+app.include_router(health_twin_router, prefix="/api")
 
 @app.get("/")
 def root():
