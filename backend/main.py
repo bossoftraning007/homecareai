@@ -151,3 +151,15 @@ def root():
         "status": "running",
         "message": "Natural home care guidance API"
     }
+
+@app.get("/api/debug/env")
+def debug_env():
+    import os
+    return {
+        "SUPABASE_URL_SET": bool(os.environ.get("SUPABASE_URL")),
+        "SUPABASE_URL_HOST": os.environ.get("SUPABASE_URL", "").split(".")[0] if os.environ.get("SUPABASE_URL") else "",
+        "SUPABASE_ANON_KEY_SET": bool(os.environ.get("SUPABASE_ANON_KEY")),
+        "SUPABASE_KEY_SET": bool(os.environ.get("SUPABASE_KEY")),
+        "GROQ_API_KEY_SET": bool(os.environ.get("GROQ_API_KEY")),
+        "has_supabase_client": "supabase" in dir() and __import__("config.database").supabase is not None,
+    }

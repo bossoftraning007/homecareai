@@ -10,6 +10,12 @@ if supabase_url and supabase_key:
         supabase = create_client(supabase_url, supabase_key)
     except Exception as e:
         print(f"Warning: Failed to create Supabase client: {e}")
+else:
+    print(f"Warning: Supabase env vars not set. URL={'SET' if supabase_url else 'EMPTY'}, KEY={'SET' if supabase_key else 'EMPTY'}")
+    try:
+        supabase = create_client(supabase_url, supabase_key)
+    except Exception as e:
+        print(f"Warning: Failed to create Supabase client: {e}")
 
 
 def get_supabase():
