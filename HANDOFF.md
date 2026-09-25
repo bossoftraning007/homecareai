@@ -1,6 +1,7 @@
 # HomeCare AI - Project Handoff Notes
 
-Last updated: 2026-09-04
+Last updated: 2026-09-25
+
 
 ---
 
@@ -31,11 +32,27 @@ Build comprehensive health/wellness application with AI assistant, health journe
 - Build command: `npm run build --prefix C:\Users\WELCOME\homecareai\frontend`
 - Stack: Next.js 16.2.12, FastAPI, Supabase, fpdf2
 
-## 🚨 CRITICAL BUG FOUND (NOT YET FIXED)
+## 🚨 ROOT CAUSE OF ALL 500 ERRORS (Sep 25 diagnosis)
+
+**Supabase project DNS not resolving.** Debug endpoint confirmed:
+- `SUPABASE_URL_SET: True`
+- `SUPABASE_ANON_KEY_SET: True`
+- `supabase_client_initialized: True`
+- BUT all Supabase queries fail with `[Errno -2] Name or service not known`
+
+The URL `https://bawzlgjfjspvxicyjsue.supabase.co` does NOT resolve in DNS from any network. The user's Supabase free project was likely **paused/suspended** after 7 days of inactivity, or the project was deleted/changed.
+
+**User must:**
+1. Go to https://supabase.com/dashboard, check if project `bawzlgjfjspvxicyjsue` is active
+2. If paused → click "Resume"
+3. If URL changed → update `SUPABASE_URL` env var on Render
+4. Re-run all pending schema migrations (tables may not exist)
+
+## 🚨 CRITICAL BUG FOUND (FIXED Sep 25)
 
 **`.single()` method does NOT exist on Supabase Python SyncQueryRequestBuilder**
 
-Affected routes (all return 500 silently when called):
+Affected routes (all returned 500 before fix):
 - `backend/routes/family.py` lines 87, 103 (POST /family, DELETE /family/{id})
 - `backend/routes/analytics.py` lines 15, 30
 - `backend/routes/dashboard.py` line 202 (POST /api/dashboard/add-vital)
@@ -48,11 +65,12 @@ Affected routes (all return 500 silently when called):
 - `backend/routes/timeline.py` line 56
 - `backend/routes/wellness.py` lines 72, 75
 
-**Error seen on Render:** `"detail":"'SyncQueryRequestBuilder' object has no attribute 'single'"`
+**Fix applied:** Replaced `.single().execute()` with `.execute()` + `result.data[0] if result.data else None` pattern.
 
-**Fix:** Replace `.single().execute()` with `.execute()` and access first element of result.data array, OR use `.maybe_single()` if available.
+**Additional fix:** Replaced deprecated `ascending=True/False` kwarg in `.order()` calls (supabase-py v2 uses `desc=True/False`) across 9 files:
+- `dashboard.py`, `family.py`, `health_twin.py`, `kitchen_remedies.py`, `recovery.py`, `reports.py`, `symptom_timeline.py`, `timeline.py`, `wellness.py`
 
-This is why user said "can't save family members" - the POST endpoint returns 500.
+**Additional fix:** Fixed `frontend/app/admin/page.tsx` - changed relative URLs (`/api/admin/users`, `/api/notifications/push/broadcast`) to `${API_URL}/api/...` with `x-user-id` header.
 
 ## Deploy Status
 - **Backend on Render:** SLOW auto-deploy. Last 3-4 commits needed manual empty commits to force redeploy. Symptom-timeline was deployed but family took 2 empty commits to land.
@@ -93,11 +111,10 @@ This is why user said "can't save family members" - the POST endpoint returns 50
   - Family Health War Room (`backend/routes/family.py`, `/family` page): members, color-coded alerts (critical/warning/info), aggregated health scores, per-member avatar colors
 
 ### In Progress
-- Investigating `.single()` bug affecting ~20 routes
-- Force-deployed family route via empty commit (`0b1bbc5`), endpoint now returns 200 (empty list) but POST fails with 500
+- Supabase project appears paused/unreachable (DNS not resolving) - user needs to resume on supabase.com dashboard
 
 ### Known Issues / Open
-- `.single()` AttributeError in 11+ route files (see CRITICAL BUG above)
+- Supabase DNS resolution failing (see ROOT CAUSE above) - ALL supabase queries return 500
 - Render auto-deploy is slow / sometimes doesn't trigger; user has had to push empty commits
 - Local Next.js build fails on Windows (SWC worker incompatible); rely on Vercel Linux build + `npx tsc --noEmit` for type checks
 - Push notification pages (`push-test`, `push-diag`, `test-notifications`) still exist in frontend but feature is abandoned; no harm but dead UI
@@ -155,7 +172,10 @@ Invoke-RestMethod -Uri "https://homecareai-backend.onrender.com/api/family/war-r
 
 ## Recent Commits
 ```
-0b1bbc5 fix: force backend redeploy - family route missing on Render
+975e067 fix: revert debug changes - removed debug endpoint
+bbb2982 fix: correct debug env endpoint
+d0e6959 chore: add debug env endpoint to diagnose Supabase DNS issue
+cbde496 fix: replace ascending kwarg with desc kwarg across 9 route files (supabase-py v2 compat) + commit admin page URL fix
 feecae5 chore: trigger Render redeploy for family router
 99c8431 fix: add null checks for user in family page
 716977d feat: Family Health War Room - track family members, color-coded alerts, aggregated health scores
