@@ -24,8 +24,9 @@ async def generate_weekly_report_endpoint(request: Request):
         supabase = get_supabase()
 
         # Get user profile
-        profile = supabase.table("profiles").select("full_name").eq("id", current_user["id"]).single().execute()
-        user_name = profile.data.get("full_name", "User") if profile.data else "User"
+        profile = supabase.table("profiles").select("full_name").eq("id", current_user["id"]).execute()
+        profile_data = profile.data[0] if profile.data else None
+        user_name = profile_data.get("full_name", "User") if profile_data else "User"
 
         # Calculate week range
         today = datetime.utcnow().date()
@@ -88,8 +89,9 @@ async def generate_monthly_report_endpoint(request: Request):
         supabase = get_supabase()
 
         # Get user profile
-        profile = supabase.table("profiles").select("full_name").eq("id", current_user["id"]).single().execute()
-        user_name = profile.data.get("full_name", "User") if profile.data else "User"
+        profile = supabase.table("profiles").select("full_name").eq("id", current_user["id"]).execute()
+        profile_data = profile.data[0] if profile.data else None
+        user_name = profile_data.get("full_name", "User") if profile_data else "User"
 
         # Calculate month range
         today = datetime.utcnow().date()

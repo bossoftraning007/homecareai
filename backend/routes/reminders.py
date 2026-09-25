@@ -94,11 +94,12 @@ async def toggle_reminder(reminder_id: str, current_user: dict = Depends(get_cur
     supabase = get_supabase()
 
     # Get current status
-    result = supabase.table("reminders").select("is_active").eq("id", reminder_id).eq("user_id", current_user["id"]).single().execute()
-    if not result.data:
+    result = supabase.table("reminders").select("is_active").eq("id", reminder_id).eq("user_id", current_user["id"]).execute()
+    reminder = result.data[0] if result.data else None
+    if not reminder:
         raise HTTPException(status_code=404, detail="Reminder not found")
 
-    new_status = not result.data.get("is_active", True)
+    new_status = not reminder.get("is_active", True)
     supabase.table("reminders").update({"is_active": new_status}).eq("id", reminder_id).execute()
 
     return {"is_active": new_status}

@@ -69,12 +69,13 @@ async def create_wellness_log(request: Request):
             # Update existing
             result = supabase.table("wellness_logs").update(log_data).eq(
                 "id", existing.data[0]["id"]
-            ).select().single().execute()
+            ).select().execute()
         else:
             # Create new
-            result = supabase.table("wellness_logs").insert(log_data).select().single().execute()
+            result = supabase.table("wellness_logs").insert(log_data).select().execute()
         
-        return {"log": result.data}
+        log = result.data[0] if result.data else None
+        return {"log": log}
     except HTTPException:
         raise
     except Exception as e:

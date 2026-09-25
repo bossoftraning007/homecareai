@@ -72,9 +72,9 @@ async def broadcast(req: BroadcastRequest, current_user: dict = Depends(get_curr
     """Send push notification to all users (admin only)."""
     # Check admin
     supabase = get_supabase()
-    profile = supabase.table("profiles").select("is_admin").eq("id", current_user["id"]).single().execute()
-
-    if not profile.data or not profile.data.get("is_admin"):
+    profile = supabase.table("profiles").select("is_admin").eq("id", current_user["id"]).execute()
+    profile_data = profile.data[0] if profile.data else None
+    if not profile_data or not profile_data.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
 
     result = await broadcast_push(req.title, req.body, req.url)
@@ -85,9 +85,9 @@ async def broadcast(req: BroadcastRequest, current_user: dict = Depends(get_curr
 async def list_subscriptions(current_user: dict = Depends(get_current_user)):
     """List all push subscriptions (admin only)."""
     supabase = get_supabase()
-    profile = supabase.table("profiles").select("is_admin").eq("id", current_user["id"]).single().execute()
-
-    if not profile.data or not profile.data.get("is_admin"):
+    profile = supabase.table("profiles").select("is_admin").eq("id", current_user["id"]).execute()
+    profile_data = profile.data[0] if profile.data else None
+    if not profile_data or not profile_data.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
 
     subs = await get_all_subscriptions()

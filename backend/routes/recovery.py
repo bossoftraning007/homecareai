@@ -58,8 +58,8 @@ async def create_new_plan(request: Request):
         }
 
         try:
-            response = supabase.table("recovery_plans").insert(plan_data).select().single().execute()
-            plan_record = response.data
+            response = supabase.table("recovery_plans").insert(plan_data).select().execute()
+            plan_record = response.data[0] if response.data else None
         except Exception as db_error:
             error_msg = str(db_error)
             if "relation" in error_msg and "does not exist" in error_msg:
@@ -119,8 +119,8 @@ async def get_plan_details(plan_id: str, request: Request):
             raise HTTPException(status_code=401, detail="Authentication required")
 
         # Get plan
-        response = supabase.table("recovery_plans").select("*").eq("id", plan_id).eq("user_id", user_id).single().execute()
-        plan = response.data
+        response = supabase.table("recovery_plans").select("*").eq("id", plan_id).eq("user_id", user_id).execute()
+        plan = response.data[0] if response.data else None
 
         if not plan:
             raise HTTPException(status_code=404, detail="Plan not found")
@@ -165,12 +165,13 @@ async def add_recovery_log(plan_id: str, request: Request):
             "remedy_taken": body.get("remedy_taken", True),
         }
 
-        response = supabase.table("recovery_logs").insert(log_data).select().single().execute()
+        response = supabase.table("recovery_logs").insert(log_data).select().execute()
+        log = response.data[0] if response.data else None
 
         # Check if any milestones should be marked as reached
         _check_milestones(supabase, plan_id)
 
-        return {"log": response.data}
+        return {"log": log}
     except HTTPException:
         raise
     except Exception as e:
@@ -187,8 +188,8 @@ async def get_plan_progress(plan_id: str, request: Request):
             raise HTTPException(status_code=401, detail="Authentication required")
 
         # Get plan
-        response = supabase.table("recovery_plans").select("*").eq("id", plan_id).eq("user_id", user_id).single().execute()
-        plan = response.data
+        response = supabase.table("recovery_plans").select("*").eq("id", plan_id).eq("user_id", user_id).execute()
+        plan = response.data[0] if response.data else None
 
         if not plan:
             raise HTTPException(status_code=404, detail="Plan not found")
@@ -217,7 +218,8 @@ async def complete_plan(plan_id: str, request: Request):
         response = supabase.table("recovery_plans").update({
             "status": "completed",
             "completed_at": datetime.utcnow().isoformat(),
-        }).eq("id", plan_id).eq("user_id", user_id).select().single().execute()
+        }).eq("id", plan_id).eq("user_id", user_id).select().execute()
+        plan = response.data[0] if response.data else None
 
         # Mark all pending milestones as reached
         supabase.table("recovery_milestones").update({
@@ -282,8 +284,8 @@ def _check_milestones(supabase, plan_id: str):
     """Check and update milestone status based on current progress."""
     try:
         # Get plan start date
-        response = supabase.table("recovery_plans").select("started_at").eq("id", plan_id).single().execute()
-        plan = response.data
+        response = supabase.table("recovery_plans").select("started_at").eq("id", plan_id).execute()
+        plan = response.data[0] if response.data else None
 
         if not plan or not plan.get("started_at"):
             return

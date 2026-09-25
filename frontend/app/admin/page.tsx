@@ -5,6 +5,8 @@ import toast, { Toaster } from 'react-hot-toast'
 import { useAuth } from '@/lib/useAuth'
 import { supabase } from '@/lib/supabase'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://homecareai-backend.onrender.com"
+
 type AdminTab = 'overview' | 'symptoms' | 'ai-logs' | 'users' | 'emergency' | 'broadcast' | 'analytics' | 'settings' | 'content'
 
 type SymptomEntry = {
@@ -119,7 +121,9 @@ export default function AdminDashboard() {
   const loadUsers = async () => {
     try {
       // Try admin API first (requires service role key)
-      const response = await fetch('/api/admin/users')
+      const response = await fetch(`${API_URL}/api/admin/users`, {
+        headers: { 'x-user-id': user?.id || '' }
+      })
       const data = await response.json()
 
       if (data.success && data.users && data.users.length > 0) {
@@ -354,7 +358,7 @@ export default function AdminDashboard() {
 
         // Send push notifications to subscribed users
         try {
-          await fetch('/api/notifications/push/broadcast', {
+          await fetch(`${API_URL}/api/notifications/push/broadcast`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

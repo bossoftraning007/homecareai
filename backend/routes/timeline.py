@@ -53,9 +53,10 @@ async def create_event(req: TimelineEventRequest, request: Request):
             "description": req.description,
             "icon": req.icon,
             "metadata": req.metadata,
-        }).select().single().execute()
+        }).select().execute()
+        event = result.data[0] if result.data else None
 
-        return {"event": result.data}
+        return {"event": event}
     except HTTPException:
         raise
     except Exception as e:

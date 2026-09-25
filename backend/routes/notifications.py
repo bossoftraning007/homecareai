@@ -148,10 +148,10 @@ async def get_preferences(current_user: dict = Depends(get_current_user)):
             supabase.table("notification_preferences")
             .select("*")
             .eq("user_id", current_user["id"])
-            .single()
             .execute()
         )
-        return result.data or {}
+        prefs = result.data[0] if result.data else {}
+        return prefs
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -331,10 +331,10 @@ async def get_broadcasts(current_user: dict = Depends(get_current_user)):
             supabase.table("profiles")
             .select("is_admin")
             .eq("id", current_user["id"])
-            .single()
             .execute()
         )
-        if not profile.data or not profile.data.get("is_admin"):
+        profile_data = profile.data[0] if profile.data else None
+        if not profile_data or not profile_data.get("is_admin"):
             raise HTTPException(status_code=403, detail="Admin access required")
 
         result = (

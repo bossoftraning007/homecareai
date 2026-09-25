@@ -199,8 +199,9 @@ async def add_vital(request: Request):
             "notes": body.get("notes", ""),
         }
 
-        result = supabase.table("vitals").insert(vital_data).select().single().execute()
-        return {"vital": result.data}
+        result = supabase.table("vitals").insert(vital_data).select().execute()
+        vital_data = result.data[0] if result.data else None
+        return {"vital": vital_data}
     except HTTPException:
         raise
     except Exception as e:

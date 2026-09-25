@@ -84,8 +84,9 @@ async def add_family_member(request: Request):
             "invite_status": invite_status,
         }
 
-        result = supabase.table("family_members").insert(member_data).select().single().execute()
-        return {"member": result.data}
+        result = supabase.table("family_members").insert(member_data).select().execute()
+        member = result.data[0] if result.data else None
+        return {"member": member}
     except HTTPException:
         raise
     except Exception as e:
@@ -100,8 +101,9 @@ async def delete_family_member(request: Request, member_id: str):
         supabase = get_supabase()
 
         # Verify ownership
-        existing = supabase.table("family_members").select("owner_id").eq("id", member_id).single().execute()
-        if not existing.data or existing.data["owner_id"] != current_user["id"]:
+        existing = supabase.table("family_members").select("owner_id").eq("id", member_id).execute()
+        existing_data = existing.data[0] if existing.data else None
+        if not existing_data or existing_data["owner_id"] != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
 
         supabase.table("family_members").update({"is_active": False}).eq("id", member_id).execute()

@@ -235,9 +235,8 @@ async def start_session(request: Request):
             "user_id": current_user["id"],
             "initial_symptom": initial,
             "status": "in_progress",
-        }).select().single().execute()
-
-        session = result.data
+        }).select().execute()
+        session = result.data[0] if result.data else None
         questions = get_questions_for_symptom(initial)
 
         return {
@@ -278,8 +277,8 @@ async def submit_answer(request: Request):
         }).execute()
 
         # Get session to find initial symptom
-        session_result = supabase.table("symptom_sessions").select("*").eq("id", session_id).single().execute()
-        session = session_result.data
+        session_result = supabase.table("symptom_sessions").select("*").eq("id", session_id).execute()
+        session = session_result.data[0] if session_result.data else None
 
         # Get all questions for this symptom
         all_questions = get_questions_for_symptom(session["initial_symptom"])
