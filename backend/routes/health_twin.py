@@ -28,13 +28,13 @@ async def get_health_twin(request: Request):
         thirty_days_ago = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d")
         wellness_result = supabase.table("wellness_logs").select("*").eq(
             "user_id", user_id
-        ).gte("log_date", thirty_days_ago).order("log_date", ascending=True).execute()
+        ).gte("log_date", thirty_days_ago).order("log_date").execute()
         wellness_logs = wellness_result.data or []
 
         # 2. Pull 30 days of vitals
         vitals_result = supabase.table("vitals").select("*").eq(
             "user_id", user_id
-        ).gte("recorded_at", thirty_days_ago.isoformat()).order("recorded_at", ascending=True).execute()
+        ).gte("recorded_at", thirty_days_ago.isoformat()).order("recorded_at").execute()
         vitals = vitals_result.data or []
 
         # 3. Run prediction model
@@ -90,7 +90,7 @@ async def get_prediction_history(request: Request):
 
         result = supabase.table("health_predictions").select("*").eq(
             "user_id", current_user["id"]
-        ).order("prediction_date", ascending=False).limit(30).execute()
+        ).order("prediction_date", desc=True).limit(30).execute()
 
         return {"predictions": result.data or []}
     except HTTPException:
@@ -108,7 +108,7 @@ async def get_insights(request: Request):
 
         result = supabase.table("health_insights").select("*").eq(
             "user_id", current_user["id"]
-        ).order("created_at", ascending=False).limit(20).execute()
+        ).order("created_at", desc=True).limit(20).execute()
 
         return {"insights": result.data or []}
     except HTTPException:

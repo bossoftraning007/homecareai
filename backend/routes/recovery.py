@@ -17,7 +17,7 @@ async def get_recovery_plans(request: Request):
         if not user_id:
             raise HTTPException(status_code=401, detail="Authentication required")
 
-        response = supabase.table("recovery_plans").select("*").eq("user_id", user_id).order("created_at", ascending=False).execute()
+        response = supabase.table("recovery_plans").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
 
         return {"plans": response.data or []}
     except HTTPException:
@@ -126,10 +126,10 @@ async def get_plan_details(plan_id: str, request: Request):
             raise HTTPException(status_code=404, detail="Plan not found")
 
         # Get milestones
-        milestones_resp = supabase.table("recovery_milestones").select("*").eq("plan_id", plan_id).order("expected_day", ascending=True).execute()
+        milestones_resp = supabase.table("recovery_milestones").select("*").eq("plan_id", plan_id).order("expected_day").execute()
 
         # Get logs
-        logs_resp = supabase.table("recovery_logs").select("*").eq("plan_id", plan_id).order("log_date", ascending=True).execute()
+        logs_resp = supabase.table("recovery_logs").select("*").eq("plan_id", plan_id).order("log_date").execute()
 
         # Calculate progress
         progress = calculate_progress(logs_resp.data or [], plan.get("total_hours", 72))
@@ -195,7 +195,7 @@ async def get_plan_progress(plan_id: str, request: Request):
             raise HTTPException(status_code=404, detail="Plan not found")
 
         # Get logs
-        logs_resp = supabase.table("recovery_logs").select("*").eq("plan_id", plan_id).order("log_date", ascending=True).execute()
+        logs_resp = supabase.table("recovery_logs").select("*").eq("plan_id", plan_id).order("log_date").execute()
 
         progress = calculate_progress(logs_resp.data or [], plan.get("total_hours", 72))
 

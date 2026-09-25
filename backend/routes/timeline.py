@@ -31,7 +31,7 @@ async def get_timeline(request: Request):
         supabase = get_supabase()
         result = supabase.table("timeline_events").select("*").eq(
             "user_id", current_user["id"]
-        ).order("event_date", ascending=False).limit(100).execute()
+        ).order("event_date", desc=True).limit(100).execute()
 
         return {"events": result.data or []}
     except HTTPException:
@@ -75,7 +75,7 @@ async def get_insights(request: Request):
 
         events = supabase.table("timeline_events").select("*").eq(
             "user_id", current_user["id"]
-        ).gte("event_date", month_ago).order("event_date", ascending=False).execute()
+        ).gte("event_date", month_ago).order("event_date", desc=True).execute()
 
         insights = []
         event_list = events.data or []
@@ -142,7 +142,7 @@ async def get_weekly_story(request: Request):
 
         events = supabase.table("timeline_events").select("*").eq(
             "user_id", current_user["id"]
-        ).gte("event_date", week_ago).order("event_date", ascending=True).execute()
+        ).gte("event_date", week_ago).order("event_date").execute()
 
         event_list = events.data or []
 

@@ -32,7 +32,7 @@ async def get_dashboard_data(request: Request):
         seven_days_ago = (datetime.utcnow() - timedelta(days=7)).isoformat()
         vitals_result = supabase.table("vitals").select("*").eq(
             "user_id", user_id
-        ).gte("recorded_at", seven_days_ago).order("recorded_at", ascending=False).execute()
+        ).gte("recorded_at", seven_days_ago).order("recorded_at", desc=True).execute()
         recent_vitals = vitals_result.data or []
 
         # 3. Active medications
@@ -56,7 +56,7 @@ async def get_dashboard_data(request: Request):
         # 6. Recent achievements
         achievements_result = supabase.table("achievements").select("*").eq(
             "user_id", user_id
-        ).order("earned_at", ascending=False).limit(5).execute()
+        ).order("earned_at", desc=True).limit(5).execute()
         achievements = achievements_result.data or []
 
         # 7. Streak freezes
@@ -72,7 +72,7 @@ async def get_dashboard_data(request: Request):
         # 9. Recent symptoms (last 5)
         symptoms_result = supabase.table("timeline_events").select("*").eq(
             "user_id", user_id
-        ).eq("event_type", "symptom").order("event_date", ascending=False).limit(5).execute()
+        ).eq("event_type", "symptom").order("event_date", desc=True).limit(5).execute()
         recent_symptoms = symptoms_result.data or []
 
         # 10. Calculate health score

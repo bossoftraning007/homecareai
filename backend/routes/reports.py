@@ -39,7 +39,7 @@ async def generate_weekly_report_endpoint(request: Request):
         # Fetch wellness logs
         logs_result = supabase.table("wellness_logs").select("*").eq(
             "user_id", current_user["id"]
-        ).gte("log_date", start_str).order("log_date", ascending=True).execute()
+        ).gte("log_date", start_str).order("log_date").execute()
         wellness_logs = logs_result.data or []
 
         # Fetch medications
@@ -103,7 +103,7 @@ async def generate_monthly_report_endpoint(request: Request):
         # Fetch wellness logs
         logs_result = supabase.table("wellness_logs").select("*").eq(
             "user_id", current_user["id"]
-        ).gte("log_date", start_str).order("log_date", ascending=True).execute()
+        ).gte("log_date", start_str).order("log_date").execute()
         wellness_logs = logs_result.data or []
 
         # Fetch medications

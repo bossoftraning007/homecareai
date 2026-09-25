@@ -334,7 +334,7 @@ async def get_history(request: Request):
         supabase = get_supabase()
         result = supabase.table("symptom_sessions").select("*, symptom_analysis(*)").eq(
             "user_id", current_user["id"]
-        ).order("created_at", ascending=False).limit(20).execute()
+        ).order("created_at", desc=True).limit(20).execute()
         return {"sessions": result.data or []}
     except HTTPException:
         raise

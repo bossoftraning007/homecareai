@@ -178,12 +178,12 @@ async def get_member_health_summary(supabase, user_id: str) -> dict:
         # Get latest wellness log
         wellness = supabase.table("wellness_logs").select("*").eq(
             "user_id", user_id
-        ).order("log_date", ascending=False).limit(7).execute()
+        ).order("log_date", desc=True).limit(7).execute()
 
         # Get latest vitals
         vitals = supabase.table("vitals").select("*").eq(
             "user_id", user_id
-        ).order("recorded_at", ascending=False).limit(10).execute()
+        ).order("recorded_at", desc=True).limit(10).execute()
 
         alerts = []
         last_logged = None

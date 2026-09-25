@@ -28,7 +28,7 @@ async def get_wellness_logs(request: Request):
         
         result = supabase.table("wellness_logs").select("*").eq(
             "user_id", current_user["id"]
-        ).gte("log_date", start_date).order("log_date", ascending=False).execute()
+        ).gte("log_date", start_date).order("log_date", desc=True).execute()
         
         return {"logs": result.data or []}
     except HTTPException:
@@ -94,7 +94,7 @@ async def get_wellness_insights(request: Request):
         
         result = supabase.table("wellness_logs").select("*").eq(
             "user_id", current_user["id"]
-        ).gte("log_date", start_date).order("log_date", ascending=True).execute()
+        ).gte("log_date", start_date).order("log_date").execute()
         
         logs = result.data or []
         

@@ -49,7 +49,7 @@ async def get_all_remedies(request: Request):
     """Get all published kitchen remedies."""
     try:
         supabase = get_supabase()
-        result = supabase.table("kitchen_remedies").select("*").eq("is_published", True).order("created_at", ascending=False).execute()
+        result = supabase.table("kitchen_remedies").select("*").eq("is_published", True).order("created_at", desc=True).execute()
         return {"remedies": result.data or []}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
